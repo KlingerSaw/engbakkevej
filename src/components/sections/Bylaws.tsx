@@ -77,7 +77,7 @@ export function BylawsSection({ hoveredSection, setHoveredSection }: BylawsSecti
 
   return (
     <Section
-      index={9}
+      index={10}
       title="Vedtægter"
       icon={<ScrollText className="w-6 h-6" />}
       content={

@@ -10,7 +10,7 @@ interface FeesSectionProps {
 export function FeesSection({ hoveredSection, setHoveredSection }: FeesSectionProps) {
   return (
     <Section
-      index={1}
+      index={2}
       title="Kontingent"
       icon={<Users className="w-6 h-6" />}
       content={

@@ -18,7 +18,7 @@ export function IdeasSection({ hoveredSection, setHoveredSection }: IdeasSection
 
   return (
     <Section
-      index={7}
+      index={8}
       title="Del dine ideer"
       icon={<MessageSquarePlus className="w-6 h-6" />}
       content={

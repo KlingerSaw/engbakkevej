@@ -11,7 +11,7 @@ interface BoardMeetingsSectionProps {
 export function BoardMeetingsSection({ hoveredSection, setHoveredSection }: BoardMeetingsSectionProps) {
   return (
     <Section
-      index={8}
+      index={9}
       title="Bestyrelsesmøder"
       icon={<ClipboardList className="w-6 h-6" />}
       content={

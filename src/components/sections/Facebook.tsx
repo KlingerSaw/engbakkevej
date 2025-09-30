@@ -10,7 +10,7 @@ interface FacebookSectionProps {
 export function FacebookSection({ hoveredSection, setHoveredSection }: FacebookSectionProps) {
   return (
     <Section
-      index={4}
+      index={5}
       title="Facebookside"
       icon={<Facebook className="w-6 h-6" />}
       content={

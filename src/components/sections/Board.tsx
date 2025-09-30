@@ -10,7 +10,7 @@ interface BoardSectionProps {
 export function BoardSection({ hoveredSection, setHoveredSection }: BoardSectionProps) {
   return (
     <Section
-      index={6}
+      index={7}
       title="Bestyrelsen"
       icon={<MapPin className="w-6 h-6" />}
       content={

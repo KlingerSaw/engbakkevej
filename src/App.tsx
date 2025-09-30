@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { WelcomeSection } from './components/sections/Welcome';
+import { NewsSection } from './components/sections/News';
 import { ActivitiesSection } from './components/sections/Activities';
 import { GeneralMeetingSection } from './components/sections/GeneralMeeting';
 import { FeesSection } from './components/sections/Fees';
@@ -26,6 +27,12 @@ function App() {
       <div className="max-w-6xl mx-auto grid gap-8">
         {/* Top Row - Full Width Welcome */}
         <WelcomeSection 
+          hoveredSection={hoveredSection}
+          setHoveredSection={setHoveredSection}
+        />
+
+        {/* News Section */}
+        <NewsSection 
           hoveredSection={hoveredSection}
           setHoveredSection={setHoveredSection}
         />

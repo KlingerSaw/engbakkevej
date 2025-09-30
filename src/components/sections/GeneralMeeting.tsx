@@ -10,7 +10,7 @@ interface GeneralMeetingSectionProps {
 export function GeneralMeetingSection({ hoveredSection, setHoveredSection }: GeneralMeetingSectionProps) {
   return (
     <Section
-      index={2}
+      index={3}
       title="Generalforsamling"
       icon={<Mail className="w-6 h-6" />}
       content={

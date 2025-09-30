@@ -24,7 +24,7 @@ export function CalendarSection({ hoveredSection, setHoveredSection }: CalendarS
   if (loading) {
     return (
       <Section
-        index={5}
+        index={6}
         title="Arrangementskalender 2025"
         icon={<Calendar className="w-6 h-6" />}
         content={<LoadingCalendar />}
@@ -37,7 +37,7 @@ export function CalendarSection({ hoveredSection, setHoveredSection }: CalendarS
   return (
     <>
       <Section
-        index={5}
+        index={6}
         title="Arrangementskalender 2025"
         icon={<Calendar className="w-6 h-6" />}
         content={

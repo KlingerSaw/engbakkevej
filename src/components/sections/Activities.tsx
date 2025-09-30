@@ -10,7 +10,7 @@ interface ActivitiesSectionProps {
 export function ActivitiesSection({ hoveredSection, setHoveredSection }: ActivitiesSectionProps) {
   return (
     <Section
-      index={3}
+      index={4}
       title="Arbejdsdage og vejfest"
       icon={<Tool className="w-6 h-6" />}
       content={
