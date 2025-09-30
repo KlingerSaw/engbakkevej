@@ -1,7 +1,8 @@
 import React from 'react';
-import { Newspaper } from 'lucide-react';
+import { Newspaper, Heart } from 'lucide-react';
 import { Section } from '../Section';
 import { useNews } from '../../hooks/useNews';
+import { NewsLikes } from '../news/NewsLikes';
 
 interface NewsSectionProps {
   hoveredSection: number | null;
@@ -56,7 +57,10 @@ export function NewsSection({ hoveredSection, setHoveredSection }: NewsSectionPr
               <div key={item.id} className="bg-white/20 rounded-lg p-4">
                 <h3 className="font-semibold text-brand-blue mb-2">{item.title}</h3>
                 <p className="text-sm text-gray-700 mb-2">{item.content}</p>
-                <p className="text-xs text-gray-600">{formatDate(item.created_at)}</p>
+                <div className="flex justify-between items-center">
+                  <p className="text-xs text-gray-600">{formatDate(item.created_at)}</p>
+                  <NewsLikes newsId={item.id} />
+                </div>
               </div>
             ))
           )}
