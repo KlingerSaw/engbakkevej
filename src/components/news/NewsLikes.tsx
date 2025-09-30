@@ -59,9 +59,9 @@ export function NewsLikes({ newsId }: NewsLikesProps) {
         .select('id')
         .eq('news_id', newsId)
         .eq('device_id', deviceId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
       setHasLiked(!!data);
     } catch (error) {
       console.error('Error checking like status:', error);
