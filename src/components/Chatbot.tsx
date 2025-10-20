@@ -32,30 +32,78 @@ export function Chatbot() {
 
     const userMessage: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, userMessage]);
+    const userInput = input.toLowerCase();
     setInput('');
     setIsLoading(true);
 
     try {
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-assistant`;
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [...messages, userMessage]
-        }),
-      });
+      const { data: boardMeetings } = await supabase
+        .from('board_meetings')
+        .select('*')
+        .order('date', { ascending: false })
+        .limit(5);
 
-      if (!response.ok) {
-        throw new Error('Failed to get response');
+      const { data: events } = await supabase
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true });
+
+      const { data: bylaws } = await supabase
+        .from('bylaws')
+        .select('*')
+        .order('section_number', { ascending: true });
+
+      let responseText = '';
+
+      if (userInput.includes('bestyrelse') && !userInput.includes('møde')) {
+        responseText = `Bestyrelsen består af:\n\n- René nr. 37 (Formand)\n- Sune nr. 22 (Næstformand)\n- Inger nr. 24 (Kasserer)\n- Tommy nr. 9 (Medlem)\n- Birger nr. 21 (Medlem)`;
+      } else if (userInput.includes('kontingent') || userInput.includes('pris') || userInput.includes('koster')) {
+        responseText = 'Kontingentet er 500 kr. årligt for alle medlemmer.';
+      } else if (userInput.includes('møde') || userInput.includes('referat') || userInput.includes('drøftet')) {
+        if (boardMeetings && boardMeetings.length > 0) {
+          const latestMeeting = boardMeetings[0];
+          const stripHtml = (html: string) => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+          const meetingDate = new Date(latestMeeting.date).toLocaleDateString('da-DK', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+          const minutesPreview = latestMeeting.minutes_text
+            ? stripHtml(latestMeeting.minutes_text).substring(0, 600) + '...'
+            : 'Intet referat tilgængeligt endnu.';
+
+          responseText = `Seneste bestyrelsesmøde var den ${meetingDate} hos ${latestMeeting.location}.\n\n${minutesPreview}`;
+        } else {
+          responseText = 'Der er ingen bestyrelsesmødereferater tilgængelige endnu.';
+        }
+      } else if (userInput.includes('event') || userInput.includes('arrangement')) {
+        if (events && events.length > 0) {
+          responseText = 'Kommende events:\n\n' + events.map(e => {
+            const date = new Date(e.date).toLocaleDateString('da-DK', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+            return `- ${e.name} den ${date}${e.description ? ': ' + e.description : ''}`;
+          }).join('\n');
+        } else {
+          responseText = 'Der er ingen kommende events planlagt i øjeblikket.';
+        }
+      } else if (userInput.includes('vedtægt')) {
+        if (bylaws && bylaws.length > 0) {
+          responseText = 'Foreningens vedtægter:\n\n' + bylaws.slice(0, 5).map(b =>
+            `§${b.section_number} ${b.title}`
+          ).join('\n') + '\n\nDu kan se alle vedtægter i afsnittet "Vedtægter" på hjemmesiden.';
+        } else {
+          responseText = 'Vedtægterne er ikke tilgængelige i øjeblikket.';
+        }
+      } else {
+        responseText = 'Jeg kan hjælpe dig med:\n\n- Information om bestyrelsen\n- Kontingent og priser\n- Kommende events og arrangementer\n- Bestyrelsesmøder og referater\n- Foreningens vedtægter\n\nHvad vil du gerne vide mere om?';
       }
 
-      const data = await response.json();
       const assistantMessage: Message = {
         role: 'assistant',
-        content: data.message
+        content: responseText
       };
 
       setMessages(prev => [...prev, assistantMessage]);
