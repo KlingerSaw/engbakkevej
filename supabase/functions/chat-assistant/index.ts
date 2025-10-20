@@ -1,5 +1,4 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,18 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-interface Message {
-  role: string;
-  content: string;
-}
-
-interface RequestBody {
-  messages: Message[];
-}
-
 Deno.serve(async (req: Request) => {
-  console.log("Request received", req.method);
-  
   if (req.method === "OPTIONS") {
     return new Response(null, {
       status: 200,
@@ -27,22 +15,11 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    console.log("Starting chat assistant...");
-    
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
 
-    console.log("Environment check:", {
-      hasSupabaseUrl: !!supabaseUrl,
-      hasSupabaseKey: !!supabaseKey,
-      hasOpenAI: !!openaiApiKey
-    });
-
     if (!openaiApiKey) {
-      console.error("OPENAI_API_KEY missing");
       return new Response(
-        JSON.stringify({ error: "OPENAI_API_KEY is not configured" }),
+        JSON.stringify({ error: "OPENAI_API_KEY is not configured. Please configure it in Supabase Edge Functions settings." }),
         {
           status: 500,
           headers: {
@@ -53,45 +30,10 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (!supabaseUrl || !supabaseKey) {
-      console.error("Supabase credentials missing");
-      return new Response(
-        JSON.stringify({ error: "Supabase credentials missing" }),
-        {
-          status: 500,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    console.log("Supabase client created");
-
-    let body;
-    try {
-      body = await req.json();
-      console.log("Request body parsed:", body);
-    } catch (e) {
-      console.error("Failed to parse request body:", e);
-      return new Response(
-        JSON.stringify({ error: "Invalid JSON in request body" }),
-        {
-          status: 400,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
-
-    const { messages }: RequestBody = body;
+    const body = await req.json();
+    const { messages } = body;
 
     if (!messages || !Array.isArray(messages)) {
-      console.error("Invalid messages format:", messages);
       return new Response(
         JSON.stringify({ error: "Invalid messages format" }),
         {
@@ -104,54 +46,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log("Fetching data from Supabase...");
-
-    const [eventsResult, newsResult, bylawsResult, ideasResult, boardMeetingsResult] = await Promise.all([
-      supabase.from("events").select("*").order("date", { ascending: true }),
-      supabase.from("news").select("*").eq("published", true).order("created_at", { ascending: false }).limit(5),
-      supabase.from("bylaws").select("*").order("section_number", { ascending: true }),
-      supabase.from("ideas").select("*").order("created_at", { ascending: false }).limit(10),
-      supabase.from("board_meetings").select("*").order("date", { ascending: false }).limit(5)
-    ]);
-
-    console.log("Data fetched");
-
-    const events = eventsResult.data || [];
-    const news = newsResult.data || [];
-    const bylaws = bylawsResult.data || [];
-    const ideas = ideasResult.data || [];
-    const boardMeetings = boardMeetingsResult.data || [];
-
-    const systemPrompt = `Du er en hjælpsom assistent for Grundejerforeningen Engbakken. Du skal kun svare baseret på information fra foreningens hjemmeside og database.
-
-BESTYRELSEN:
-- René nr. 37 (Formand)
-- Sune nr. 22 (Næstformand)
-- Inger nr. 24 (Kasserer)
-- Tommy nr. 9 (Medlem)
-- Birger nr. 21 (Medlem)
-
-KONTINGENT:
-Kontingentet er 500 kr. årligt for alle medlemmer.
-
-KOMMENDE EVENTS:
-${events.map(e => `- ${e.name} den ${new Date(e.date).toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' })}: ${e.description || ''}`).join('\n') || 'Ingen kommende events'}
-
-SENESTE NYHEDER:
-${news.map(n => `- ${n.title}: ${n.content.substring(0, 200)}...`).join('\n') || 'Ingen nyheder'}
-
-VEDTÆGTER:
-${bylaws.map(b => `§${b.section_number} ${b.title}: ${b.content.substring(0, 150)}...`).join('\n') || 'Ingen vedtægter'}
-
-IDÉER FRA MEDLEMMER:
-${ideas.map(i => `- ${i.title}: ${i.description.substring(0, 100)}...`).join('\n') || 'Ingen idéer'}
-
-BESTYRELSESMØDER:
-${boardMeetings.map(m => `- ${new Date(m.date).toLocaleDateString('da-DK')}: ${m.location}`).join('\n') || 'Ingen møder'}
-
-Svar altid på dansk. Vær venlig og hjælpsom. Hvis du ikke har information om noget, sig det ærligt og foreslå at bruge kontaktformularen på hjemmesiden.`;
-
-    console.log("Calling OpenAI API...");
+    const systemPrompt = `Du er en hj\u00e6lpsom assistent for Grundejerforeningen Engbakken. Du skal kun svare baseret p\u00e5 information fra foreningens hjemmeside og database.\n\nBESTYRELSEN:\n- Ren\u00e9 nr. 37 (Formand)\n- Sune nr. 22 (N\u00e6stformand)\n- Inger nr. 24 (Kasserer)\n- Tommy nr. 9 (Medlem)\n- Birger nr. 21 (Medlem)\n\nKONTINGENT:\nKontingentet er 500 kr. \u00e5rligt for alle medlemmer.\n\nSvar altid p\u00e5 dansk. V\u00e6r venlig og hj\u00e6lpsom. Hvis du ikke har information om noget, sig det \u00e6rligt og foresl\u00e5 at bruge kontaktformularen p\u00e5 hjemmesiden.`;
 
     const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -170,13 +65,10 @@ Svar altid på dansk. Vær venlig og hjælpsom. Hvis du ikke har information om 
       }),
     });
 
-    console.log("OpenAI response status:", openaiResponse.status);
-
     if (!openaiResponse.ok) {
       const error = await openaiResponse.text();
-      console.error("OpenAI API error:", openaiResponse.status, error);
       return new Response(
-        JSON.stringify({ error: `OpenAI API error: ${openaiResponse.status} - ${error.substring(0, 100)}` }),
+        JSON.stringify({ error: `OpenAI API error: ${openaiResponse.status}` }),
         {
           status: 500,
           headers: {
@@ -188,10 +80,9 @@ Svar altid på dansk. Vær venlig og hjælpsom. Hvis du ikke har information om 
     }
 
     const openaiData = await openaiResponse.json();
-    console.log("OpenAI data received");
-    
-    if (!openaiData.choices || !openaiData.choices[0] || !openaiData.choices[0].message) {
-      console.error("Invalid OpenAI response structure:", openaiData);
+    const assistantMessage = openaiData.choices?.[0]?.message?.content;
+
+    if (!assistantMessage) {
       return new Response(
         JSON.stringify({ error: "Invalid response from OpenAI" }),
         {
@@ -204,9 +95,6 @@ Svar altid på dansk. Vær venlig og hjælpsom. Hvis du ikke har information om 
       );
     }
 
-    const assistantMessage = openaiData.choices[0].message.content;
-    console.log("Returning response");
-
     return new Response(
       JSON.stringify({ message: assistantMessage }),
       {
@@ -217,16 +105,9 @@ Svar altid på dansk. Vær venlig og hjælpsom. Hvis du ikke har information om 
       }
     );
   } catch (error) {
-    console.error("Unhandled error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error("Error stack:", errorStack);
-    
     return new Response(
-      JSON.stringify({ 
-        error: errorMessage,
-        details: errorStack ? errorStack.substring(0, 200) : undefined
-      }),
+      JSON.stringify({ error: errorMessage }),
       {
         status: 500,
         headers: {
