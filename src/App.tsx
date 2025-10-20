@@ -12,9 +12,11 @@ import { BoardMeetingsSection } from './components/sections/BoardMeetings';
 import { BylawsSection } from './components/sections/Bylaws';
 import { ContactForm } from './components/ContactForm';
 import { Chatbot } from './components/Chatbot';
+import MinutesUpload from './components/MinutesUpload';
 
 function App() {
   const [hoveredSection, setHoveredSection] = useState<number | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
 
   return (
     <div className="min-h-screen bg-brand-blue-lighter p-8">
@@ -85,16 +87,34 @@ function App() {
         />
 
         {/* Board Section */}
-        <BoardSection 
+        <BoardSection
           hoveredSection={hoveredSection}
           setHoveredSection={setHoveredSection}
         />
+
+        {/* Upload Section - Hidden by default */}
+        {showUpload && (
+          <div className="mt-12">
+            <MinutesUpload />
+          </div>
+        )}
 
         {/* Contact Form */}
         <div className="mt-12">
           <ContactForm />
         </div>
       </div>
+
+      {/* Upload Toggle Button - Fixed bottom right */}
+      <button
+        onClick={() => setShowUpload(!showUpload)}
+        className="fixed bottom-24 right-8 bg-gray-700 text-white p-3 rounded-full shadow-lg hover:bg-gray-800 transition z-40"
+        title={showUpload ? 'Skjul upload' : 'Vis upload (kun formand)'}
+      >
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
+      </button>
 
       {/* Chatbot */}
       <Chatbot />
