@@ -1,18 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Upload, Mail, Lock, Calendar, MapPin } from 'lucide-react';
 
-export default function MinutesUpload() {
+interface MinutesUploadProps {
+  meetingId?: string;
+  prefillDate?: string;
+  prefillLocation?: string;
+  onClose?: () => void;
+}
+
+export default function MinutesUpload({ meetingId, prefillDate, prefillLocation, onClose }: MinutesUploadProps = {}) {
   const [step, setStep] = useState<'email' | 'verify' | 'upload'>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // Form data
-  const [meetingDate, setMeetingDate] = useState('');
-  const [location, setLocation] = useState('');
+  const [meetingDate, setMeetingDate] = useState(prefillDate || '');
+  const [location, setLocation] = useState(prefillLocation || '');
   const [minutesHtml, setMinutesHtml] = useState('');
+
+  useEffect(() => {
+    if (prefillDate) setMeetingDate(prefillDate);
+    if (prefillLocation) setLocation(prefillLocation);
+  }, [prefillDate, prefillLocation]);
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +86,7 @@ export default function MinutesUpload() {
           body: JSON.stringify({
             email,
             code,
+            meetingId,
             meetingData: {
               date: meetingDate,
               location,
@@ -98,6 +111,10 @@ export default function MinutesUpload() {
       setMeetingDate('');
       setLocation('');
       setMinutesHtml('');
+
+      if (onClose) {
+        onClose();
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Der opstod en fejl');
     } finally {

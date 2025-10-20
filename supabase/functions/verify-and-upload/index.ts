@@ -34,7 +34,7 @@ Deno.serve(async (req: Request) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { email, code, meetingData } = await req.json();
+    const { email, code, meetingId, meetingData } = await req.json();
 
     // Verify code
     const { data: verificationData, error: verifyError } = await supabase
@@ -65,16 +65,38 @@ Deno.serve(async (req: Request) => {
       .update({ used: true })
       .eq("id", verificationData.id);
 
-    // Upload meeting minutes
-    const { data: meetingResult, error: uploadError } = await supabase
-      .from("board_meetings")
-      .insert({
-        date: meetingData.date,
-        location: meetingData.location,
-        minutes_text: meetingData.minutes_text,
-      })
-      .select()
-      .single();
+    // Upload or update meeting minutes
+    let meetingResult;
+    let uploadError;
+
+    if (meetingId) {
+      // Update existing meeting with minutes
+      const result = await supabase
+        .from("board_meetings")
+        .update({
+          minutes_text: meetingData.minutes_text,
+        })
+        .eq("id", meetingId)
+        .select()
+        .single();
+
+      meetingResult = result.data;
+      uploadError = result.error;
+    } else {
+      // Create new meeting
+      const result = await supabase
+        .from("board_meetings")
+        .insert({
+          date: meetingData.date,
+          location: meetingData.location,
+          minutes_text: meetingData.minutes_text,
+        })
+        .select()
+        .single();
+
+      meetingResult = result.data;
+      uploadError = result.error;
+    }
 
     if (uploadError) {
       return new Response(

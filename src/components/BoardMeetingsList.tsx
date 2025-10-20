@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, MapPin, AlertTriangle } from 'lucide-react';
+import { FileText, MapPin, AlertTriangle, Upload, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { generatePDF } from '../utils/pdf';
+import MeetingUploadModal from './MeetingUploadModal';
 
 interface BoardMeeting {
   id: string;
@@ -15,6 +16,8 @@ interface BoardMeeting {
 export function BoardMeetingsList() {
   const [meetings, setMeetings] = useState<BoardMeeting[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [selectedMeeting, setSelectedMeeting] = useState<BoardMeeting | null>(null);
 
   useEffect(() => {
     fetchMeetings();
@@ -93,8 +96,31 @@ export function BoardMeetingsList() {
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
+  const handleOpenUploadModal = (meeting?: BoardMeeting) => {
+    if (meeting) {
+      setSelectedMeeting(meeting);
+    } else {
+      setSelectedMeeting(null);
+    }
+    setUploadModalOpen(true);
+  };
+
+  const handleCloseUploadModal = () => {
+    setUploadModalOpen(false);
+    setSelectedMeeting(null);
+  };
+
   return (
     <div className="space-y-4">
+      {/* Create New Meeting Button */}
+      <button
+        onClick={() => handleOpenUploadModal()}
+        className="w-full bg-brand-blue text-white py-3 px-4 rounded-lg hover:bg-brand-blue-dark transition flex items-center justify-center gap-2 font-medium"
+      >
+        <Plus className="w-5 h-5" />
+        Opret nyt møde
+      </button>
+
       {meetings.length === 0 ? (
         <p className="text-center">Ingen bestyrelsesmøder planlagt.</p>
       ) : (
@@ -163,10 +189,15 @@ export function BoardMeetingsList() {
                     </div>
                     <div className="flex items-center gap-2">
                       {isPastDate(meeting.date) && !meeting.minutes_text && (
-                        <div className="flex items-center gap-1 text-sm text-amber-500">
-                          <AlertTriangle className="w-4 h-4" />
-                          <span>Mangler referat</span>
-                        </div>
+                        <motion.button
+                          onClick={() => handleOpenUploadModal(meeting)}
+                          className="flex items-center gap-1 text-sm bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600 transition-colors"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Upload className="w-4 h-4" />
+                          <span>Upload referat</span>
+                        </motion.button>
                       )}
                       {meeting.minutes_text && (
                         <motion.button
@@ -187,6 +218,15 @@ export function BoardMeetingsList() {
           </div>
         </>
       )}
+
+      {/* Upload Modal */}
+      <MeetingUploadModal
+        isOpen={uploadModalOpen}
+        onClose={handleCloseUploadModal}
+        meetingId={selectedMeeting?.id}
+        meetingDate={selectedMeeting?.date.split('T')[0]}
+        meetingLocation={selectedMeeting?.location}
+      />
     </div>
   );
 }
