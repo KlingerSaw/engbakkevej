@@ -155,7 +155,7 @@ export function Chatbot() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 bg-green-600 hover:bg-green-700 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 z-50"
+          className="fixed bottom-6 right-6 bg-brand-blue hover:bg-brand-blue-dark text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 z-50"
           aria-label="Åbn chat"
         >
           <MessageCircle className="w-6 h-6" />
@@ -163,15 +163,15 @@ export function Chatbot() {
       )}
 
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-lg shadow-2xl flex flex-col z-50 border border-gray-200">
-          <div className="bg-green-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+        <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-brand-cream rounded-lg shadow-2xl flex flex-col z-50 border border-gray-200">
+          <div className="bg-brand-blue text-white p-4 rounded-t-lg flex justify-between items-center">
             <div className="flex items-center gap-2">
               <MessageCircle className="w-5 h-5" />
               <h3 className="font-semibold">Engbakken Assistent</h3>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="hover:bg-green-700 rounded p-1 transition-colors"
+              className="hover:bg-brand-blue-dark rounded p-1 transition-colors"
               aria-label="Luk chat"
             >
               <X className="w-5 h-5" />
@@ -187,8 +187,8 @@ export function Chatbot() {
                 <div
                   className={`max-w-[80%] rounded-lg p-3 ${
                     message.role === 'user'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-800'
+                      ? 'bg-brand-blue text-white'
+                      : 'bg-white text-gray-800'
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -197,7 +197,7 @@ export function Chatbot() {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-lg p-3">
+                <div className="bg-white rounded-lg p-3">
                   <Loader2 className="w-5 h-5 animate-spin text-gray-600" />
                 </div>
               </div>
@@ -213,13 +213,13 @@ export function Chatbot() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Skriv din besked..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue"
                 disabled={isLoading}
               />
               <button
                 onClick={sendMessage}
                 disabled={isLoading || !input.trim()}
-                className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-4 py-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-brand-blue hover:bg-brand-blue-dark text-white rounded-lg px-4 py-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Send besked"
               >
                 <Send className="w-5 h-5" />
