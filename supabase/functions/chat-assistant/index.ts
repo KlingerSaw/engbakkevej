@@ -66,7 +66,7 @@ Deno.serve(async (req: Request) => {
       .order("date", { ascending: false })
       .limit(5);
 
-    const systemPrompt = `Du er en hjælpsom assistent for Præstemarken Grundejerforening. Du skal kun svare baseret på information fra foreningens hjemmeside og database.
+    const systemPrompt = `Du er en hjælpsom assistent for Grundejerforeningen Engbakken. Du skal kun svare baseret på information fra foreningens hjemmeside og database.
 
 BESTYRELSEN:
 - René nr. 37 (Formand)

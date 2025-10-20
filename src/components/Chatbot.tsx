@@ -12,7 +12,7 @@ export function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hej! Jeg er din assistent for Præstemarken Grundejerforening. Jeg kan hjælpe dig med information om foreningen, events, vedtægter og meget mere. Hvad kan jeg hjælpe dig med?'
+      content: 'Hej! Jeg er din assistent for Grundejerforeningen Engbakken. Jeg kan hjælpe dig med information om foreningen, events, vedtægter og meget mere. Hvad kan jeg hjælpe dig med?'
     }
   ]);
   const [input, setInput] = useState('');
@@ -94,7 +94,7 @@ export function Chatbot() {
           <div className="bg-green-600 text-white p-4 rounded-t-lg flex justify-between items-center">
             <div className="flex items-center gap-2">
               <MessageCircle className="w-5 h-5" />
-              <h3 className="font-semibold">Præstemarken Assistent</h3>
+              <h3 className="font-semibold">Engbakken Assistent</h3>
             </div>
             <button
               onClick={() => setIsOpen(false)}
