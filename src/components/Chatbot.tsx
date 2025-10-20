@@ -62,15 +62,40 @@ export function Chatbot() {
       } else if (userInput.includes('møde') || userInput.includes('referat') || userInput.includes('drøftet')) {
         if (boardMeetings && boardMeetings.length > 0) {
           const latestMeeting = boardMeetings[0];
-          const stripHtml = (html: string) => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+          const stripHtml = (html: string) => {
+            return html
+              .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+              .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+              .replace(/<!DOCTYPE[^>]*>/gi, '')
+              .replace(/<head[^>]*>[\s\S]*?<\/head>/gi, '')
+              .replace(/<\/?html[^>]*>/gi, '')
+              .replace(/<\/?body[^>]*>/gi, '')
+              .replace(/<br\s*\/?>/gi, '\n')
+              .replace(/<\/?(p|div|h[1-6]|li)[^>]*>/gi, '\n')
+              .replace(/<[^>]*>/g, '')
+              .replace(/&nbsp;/g, ' ')
+              .replace(/&amp;/g, '&')
+              .replace(/&lt;/g, '<')
+              .replace(/&gt;/g, '>')
+              .replace(/&quot;/g, '"')
+              .replace(/\n\s*\n/g, '\n\n')
+              .replace(/[ \t]+/g, ' ')
+              .trim();
+          };
+
           const meetingDate = new Date(latestMeeting.date).toLocaleDateString('da-DK', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
           });
-          const minutesPreview = latestMeeting.minutes_text
-            ? stripHtml(latestMeeting.minutes_text).substring(0, 600) + '...'
+
+          const cleanText = latestMeeting.minutes_text
+            ? stripHtml(latestMeeting.minutes_text)
             : 'Intet referat tilgængeligt endnu.';
+
+          const minutesPreview = cleanText.length > 800
+            ? cleanText.substring(0, 800) + '...'
+            : cleanText;
 
           responseText = `Seneste bestyrelsesmøde var den ${meetingDate} hos ${latestMeeting.location}.\n\n${minutesPreview}`;
         } else {
