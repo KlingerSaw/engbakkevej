@@ -11,6 +11,7 @@ import { BoardSection } from './components/sections/Board';
 import { BoardMeetingsSection } from './components/sections/BoardMeetings';
 import { BylawsSection } from './components/sections/Bylaws';
 import { ContactForm } from './components/ContactForm';
+import { Chatbot } from './components/Chatbot';
 
 function App() {
   const [hoveredSection, setHoveredSection] = useState<number | null>(null);
@@ -94,6 +95,9 @@ function App() {
           <ContactForm />
         </div>
       </div>
+
+      {/* Chatbot */}
+      <Chatbot />
     </div>
   );
 }
