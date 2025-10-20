@@ -30,12 +30,34 @@ Deno.serve(async (req: Request) => {
     const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
 
     if (!openaiApiKey) {
-      throw new Error("OPENAI_API_KEY is not configured");
+      return new Response(
+        JSON.stringify({ error: "OPENAI_API_KEY is not configured" }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { messages }: RequestBody = await req.json();
+
+    if (!messages || !Array.isArray(messages)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid messages format" }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
 
     const { data: events } = await supabase
       .from("events")
@@ -115,10 +137,33 @@ Svar altid på dansk. Vær venlig og hjælpsom. Hvis du ikke har information om 
     if (!openaiResponse.ok) {
       const error = await openaiResponse.text();
       console.error("OpenAI API error:", error);
-      throw new Error(`OpenAI API error: ${openaiResponse.status}`);
+      return new Response(
+        JSON.stringify({ error: `OpenAI API error: ${openaiResponse.status}` }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
     }
 
     const openaiData = await openaiResponse.json();
+    
+    if (!openaiData.choices || !openaiData.choices[0] || !openaiData.choices[0].message) {
+      return new Response(
+        JSON.stringify({ error: "Invalid response from OpenAI" }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
     const assistantMessage = openaiData.choices[0].message.content;
 
     return new Response(
@@ -132,8 +177,9 @@ Svar altid på dansk. Vær venlig og hjælpsom. Hvis du ikke har information om 
     );
   } catch (error) {
     console.error("Error:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       {
         status: 500,
         headers: {
