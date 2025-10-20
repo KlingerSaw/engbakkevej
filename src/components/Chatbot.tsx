@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, X, Loader2 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -32,111 +31,46 @@ export function Chatbot() {
 
     const userMessage: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, userMessage]);
-    const userInput = input.toLowerCase();
     setInput('');
     setIsLoading(true);
 
     try {
-      const { data: boardMeetings } = await supabase
-        .from('board_meetings')
-        .select('*')
-        .order('date', { ascending: false })
-        .limit(5);
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-assistant`;
+      const headers = {
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      };
 
-      const { data: events } = await supabase
-        .from('events')
-        .select('*')
-        .order('date', { ascending: true });
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map(m => ({ role: m.role, content: m.content }))
+        })
+      });
 
-      const { data: bylaws } = await supabase
-        .from('bylaws')
-        .select('*')
-        .order('section_number', { ascending: true });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      let responseText = '';
+      const data = await response.json();
 
-      if (userInput.includes('bestyrelse') && !userInput.includes('møde')) {
-        responseText = `Bestyrelsen består af:\n\n- René nr. 37 (Formand)\n- Sune nr. 22 (Næstformand)\n- Inger nr. 24 (Kasserer)\n- Tommy nr. 9 (Medlem)\n- Birger nr. 21 (Medlem)`;
-      } else if (userInput.includes('kontingent') || userInput.includes('pris') || userInput.includes('koster')) {
-        responseText = 'Kontingentet er 1600 kr. årligt for alle medlemmer.\n\nBidrag til vejfond er 400 kr.\n\nKontingentet afregnes årligt og forfalder 1. oktober. Anmodning om indbetaling sendes via mail.';
-      } else if (userInput.includes('møde') || userInput.includes('referat') || userInput.includes('drøftet')) {
-        if (boardMeetings && boardMeetings.length > 0) {
-          const latestMeeting = boardMeetings[0];
-          const stripHtml = (html: string) => {
-            return html
-              .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-              .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-              .replace(/<!DOCTYPE[^>]*>/gi, '')
-              .replace(/<head[^>]*>[\s\S]*?<\/head>/gi, '')
-              .replace(/<\/?html[^>]*>/gi, '')
-              .replace(/<\/?body[^>]*>/gi, '')
-              .replace(/<br\s*\/?>/gi, '\n')
-              .replace(/<\/?(p|div|h[1-6]|li)[^>]*>/gi, '\n')
-              .replace(/<[^>]*>/g, '')
-              .replace(/&nbsp;/g, ' ')
-              .replace(/&amp;/g, '&')
-              .replace(/&lt;/g, '<')
-              .replace(/&gt;/g, '>')
-              .replace(/&quot;/g, '"')
-              .replace(/\n\s*\n/g, '\n\n')
-              .replace(/[ \t]+/g, ' ')
-              .trim();
-          };
-
-          const meetingDate = new Date(latestMeeting.date).toLocaleDateString('da-DK', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          });
-
-          const cleanText = latestMeeting.minutes_text
-            ? stripHtml(latestMeeting.minutes_text)
-            : 'Intet referat tilgængeligt endnu.';
-
-          const minutesPreview = cleanText.length > 800
-            ? cleanText.substring(0, 800) + '...'
-            : cleanText;
-
-          responseText = `Seneste bestyrelsesmøde var den ${meetingDate} hos ${latestMeeting.location}.\n\n${minutesPreview}`;
-        } else {
-          responseText = 'Der er ingen bestyrelsesmødereferater tilgængelige endnu.';
-        }
-      } else if (userInput.includes('event') || userInput.includes('arrangement')) {
-        if (events && events.length > 0) {
-          responseText = 'Kommende events:\n\n' + events.map(e => {
-            const date = new Date(e.date).toLocaleDateString('da-DK', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            });
-            return `- ${e.name} den ${date}${e.description ? ': ' + e.description : ''}`;
-          }).join('\n');
-        } else {
-          responseText = 'Der er ingen kommende events planlagt i øjeblikket.';
-        }
-      } else if (userInput.includes('vedtægt')) {
-        if (bylaws && bylaws.length > 0) {
-          responseText = 'Foreningens vedtægter:\n\n' + bylaws.slice(0, 5).map(b =>
-            `§${b.section_number} ${b.title}`
-          ).join('\n') + '\n\nDu kan se alle vedtægter i afsnittet "Vedtægter" på hjemmesiden.';
-        } else {
-          responseText = 'Vedtægterne er ikke tilgængelige i øjeblikket.';
-        }
-      } else {
-        responseText = 'Jeg kan hjælpe dig med:\n\n- Information om bestyrelsen\n- Kontingent og priser\n- Kommende events og arrangementer\n- Bestyrelsesmøder og referater\n- Foreningens vedtægter\n\nHvad vil du gerne vide mere om?';
+      if (data.error) {
+        throw new Error(data.error);
       }
 
       const assistantMessage: Message = {
         role: 'assistant',
-        content: responseText
+        content: data.message
       };
 
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Der opstod en fejl';
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'Beklager, der opstod en fejl. Prøv venligst igen.'
+        content: 'Beklager, der opstod en fejl. Prøv venligst igen. Fejl: ' + errorMessage
       }]);
     } finally {
       setIsLoading(false);

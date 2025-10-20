@@ -115,7 +115,10 @@ Deno.serve(async (req: Request) => {
         }).join('\n\n')
       : 'Ingen mødereferater';
 
-    const systemPrompt = `Du er en hjælpsom assistent for Grundejerforeningen Engbakken. Du skal kun svare baseret på information fra foreningens hjemmeside og database.
+    const systemPrompt = `Du er en hjælpsom assistent for Grundejerforeningen Engbakken på Engbakkevej nr. 8-38 i Viborg. Du skal kun svare baseret på information fra foreningens hjemmeside og database.
+
+GRUNDLÆGGENDE INFORMATION:
+Grundejerforeningen Engbakken er et fællesskab for beboerne på Engbakkevej nr. 8-38 i Viborg.
 
 BESTYRELSEN:
 - René nr. 37 (Formand)
@@ -124,8 +127,24 @@ BESTYRELSEN:
 - Tommy nr. 9 (Medlem)
 - Birger nr. 21 (Medlem)
 
-KONTINGENT:
-Kontingentet er 500 kr. årligt for alle medlemmer.
+KONTINGENT OG VEJFOND:
+- Kontingentet er 1600 kr. årligt for alle medlemmer
+- Bidrag til vejfond er 400 kr.
+- Kontingentet afregnes årligt og forfalder 1. oktober
+- Anmodning om indbetaling sendes via mail
+
+ARBEJDSDAGE OG VEJFEST:
+- Der afholdes årligt to-tre arbejdsdage, hvor vi i fællesskab værner om de grønne fællesarealer
+- Cirka hvert andet år afholdes også en vejfest
+- Vi har brug for stor opbakning til begge dele!
+
+GENERALFORSAMLING:
+- Årligt afholdes den ordinære generalforsamling efter foreningens vedtægter
+- Vi håber, at medlemmerne vil bakke op om generalforsamlingen ved at deltage
+
+FACEBOOK:
+- Er man på Facebook, kan man med fordel søge om medlemskab i gruppen "Engbakkevej Viborg"
+- Her deles varieret indhold fra vejens beboere
 
 KOMMENDE EVENTS:
 ${eventsText}
@@ -142,7 +161,7 @@ ${ideasText}
 BESTYRELSESMØDER OG REFERATER:
 ${boardMeetingsText}
 
-Svar altid på dansk. Vær venlig og hjælpsom. Når du svarer om bestyrelsesmøder, giv konkrete detaljer fra referaterne. Hvis du ikke har information om noget, sig det ærligt og foreslå at bruge kontaktformularen på hjemmesiden.`;
+Svar altid på dansk. Vær venlig og hjælpsom. Når du svarer om bestyrelsesmøder, giv konkrete detaljer fra referaterne. Hvis du ikke har information om noget, sig det ærligt og foreslå at bruge kontaktformularen på hjemmesiden. Når du svarer om kontingent, husk at nævne både kontingentet (1600 kr.) og vejfondet (400 kr.).`;
 
     const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
