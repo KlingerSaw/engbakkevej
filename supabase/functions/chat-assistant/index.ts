@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,6 +16,8 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
 
     if (!openaiApiKey) {
@@ -29,6 +32,21 @@ Deno.serve(async (req: Request) => {
         }
       );
     }
+
+    if (!supabaseUrl || !supabaseKey) {
+      return new Response(
+        JSON.stringify({ error: "Supabase credentials missing" }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const body = await req.json();
     const { messages } = body;
@@ -46,7 +64,85 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const systemPrompt = `Du er en hj\u00e6lpsom assistent for Grundejerforeningen Engbakken. Du skal kun svare baseret p\u00e5 information fra foreningens hjemmeside og database.\n\nBESTYRELSEN:\n- Ren\u00e9 nr. 37 (Formand)\n- Sune nr. 22 (N\u00e6stformand)\n- Inger nr. 24 (Kasserer)\n- Tommy nr. 9 (Medlem)\n- Birger nr. 21 (Medlem)\n\nKONTINGENT:\nKontingentet er 500 kr. \u00e5rligt for alle medlemmer.\n\nSvar altid p\u00e5 dansk. V\u00e6r venlig og hj\u00e6lpsom. Hvis du ikke har information om noget, sig det \u00e6rligt og foresl\u00e5 at bruge kontaktformularen p\u00e5 hjemmesiden.`;
+    const [eventsResult, newsResult, bylawsResult, ideasResult, boardMeetingsResult] = await Promise.all([
+      supabase.from("events").select("*").order("date", { ascending: true }),
+      supabase.from("news").select("*").eq("published", true).order("created_at", { ascending: false }).limit(5),
+      supabase.from("bylaws").select("*").order("section_number", { ascending: true }),
+      supabase.from("ideas").select("*").order("created_at", { ascending: false }).limit(10),
+      supabase.from("board_meetings").select("*").order("date", { ascending: false }).limit(5)
+    ]);
+
+    const events = eventsResult.data || [];
+    const news = newsResult.data || [];
+    const bylaws = bylawsResult.data || [];
+    const ideas = ideasResult.data || [];
+    const boardMeetings = boardMeetingsResult.data || [];
+
+    const formatDate = (dateStr: string) => {
+      try {
+        return new Date(dateStr).toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' });
+      } catch {
+        return dateStr;
+      }
+    };
+
+    const stripHtml = (html: string) => {
+      return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    };
+
+    const eventsText = events.length > 0
+      ? events.map(e => `- ${e.name} den ${formatDate(e.date)}: ${e.description || ''}`).join('\n')
+      : 'Ingen kommende events';
+
+    const newsText = news.length > 0
+      ? news.map(n => `- ${n.title}: ${n.content.substring(0, 200)}...`).join('\n')
+      : 'Ingen nyheder';
+
+    const bylawsText = bylaws.length > 0
+      ? bylaws.map(b => `§${b.section_number} ${b.title}: ${b.content.substring(0, 150)}...`).join('\n')
+      : 'Ingen vedtægter';
+
+    const ideasText = ideas.length > 0
+      ? ideas.map(i => `- ${i.title}: ${i.description.substring(0, 100)}...`).join('\n')
+      : 'Ingen idéer';
+
+    const boardMeetingsText = boardMeetings.length > 0
+      ? boardMeetings.map(m => {
+          const dateStr = formatDate(m.date);
+          const location = m.location || 'Ukendt lokation';
+          const minutes = m.minutes_text ? stripHtml(m.minutes_text).substring(0, 500) : 'Intet referat tilgængeligt';
+          return `MØDE ${dateStr} - ${location}:\n${minutes}...`;
+        }).join('\n\n')
+      : 'Ingen mødereferater';
+
+    const systemPrompt = `Du er en hjælpsom assistent for Grundejerforeningen Engbakken. Du skal kun svare baseret på information fra foreningens hjemmeside og database.
+
+BESTYRELSEN:
+- René nr. 37 (Formand)
+- Sune nr. 22 (Næstformand)
+- Inger nr. 24 (Kasserer)
+- Tommy nr. 9 (Medlem)
+- Birger nr. 21 (Medlem)
+
+KONTINGENT:
+Kontingentet er 500 kr. årligt for alle medlemmer.
+
+KOMMENDE EVENTS:
+${eventsText}
+
+SENESTE NYHEDER:
+${newsText}
+
+VEDTÆGTER:
+${bylawsText}
+
+IDÉER FRA MEDLEMMER:
+${ideasText}
+
+BESTYRELSESMØDER OG REFERATER:
+${boardMeetingsText}
+
+Svar altid på dansk. Vær venlig og hjælpsom. Når du svarer om bestyrelsesmøder, giv konkrete detaljer fra referaterne. Hvis du ikke har information om noget, sig det ærligt og foreslå at bruge kontaktformularen på hjemmesiden.`;
 
     const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -61,7 +157,7 @@ Deno.serve(async (req: Request) => {
           ...messages
         ],
         temperature: 0.7,
-        max_tokens: 500,
+        max_tokens: 800,
       }),
     });
 
