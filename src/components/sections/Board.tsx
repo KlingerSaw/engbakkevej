@@ -24,11 +24,11 @@ export function BoardSection({ hoveredSection, setHoveredSection }: BoardSection
             <p className="text-sm">Næstformand</p>
           </div>
           <div>
-            <p className="font-semibold">Lars nr. 28</p>
+            <p className="font-semibold">Inger nr. 24</p>
             <p className="text-sm">Kasserer</p>
           </div>
           <div>
-            <p className="font-semibold">Inger nr. 24</p>
+            <p className="font-semibold">Tommy nr. 9</p>
             <p className="text-sm">Medlem</p>
           </div>
           <div>
