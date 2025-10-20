@@ -181,9 +181,9 @@ Svar altid på dansk. Vær venlig og hjælpsom. Når du svarer om bestyrelsesmø
     });
 
     if (!openaiResponse.ok) {
-      const error = await openaiResponse.text();
+      const errorText = await openaiResponse.text();
       return new Response(
-        JSON.stringify({ error: `OpenAI API error: ${openaiResponse.status}` }),
+        JSON.stringify({ error: `OpenAI API error: ${openaiResponse.status} - ${errorText}` }),
         {
           status: 500,
           headers: {
