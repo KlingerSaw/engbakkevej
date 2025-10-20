@@ -58,7 +58,7 @@ export function Chatbot() {
       if (userInput.includes('bestyrelse') && !userInput.includes('møde')) {
         responseText = `Bestyrelsen består af:\n\n- René nr. 37 (Formand)\n- Sune nr. 22 (Næstformand)\n- Inger nr. 24 (Kasserer)\n- Tommy nr. 9 (Medlem)\n- Birger nr. 21 (Medlem)`;
       } else if (userInput.includes('kontingent') || userInput.includes('pris') || userInput.includes('koster')) {
-        responseText = 'Kontingentet er 500 kr. årligt for alle medlemmer.';
+        responseText = 'Kontingentet er 1600 kr. årligt for alle medlemmer.\n\nBidrag til vejfond er 400 kr.\n\nKontingentet afregnes årligt og forfalder 1. oktober. Anmodning om indbetaling sendes via mail.';
       } else if (userInput.includes('møde') || userInput.includes('referat') || userInput.includes('drøftet')) {
         if (boardMeetings && boardMeetings.length > 0) {
           const latestMeeting = boardMeetings[0];
