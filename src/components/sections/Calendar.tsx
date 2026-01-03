@@ -16,6 +16,7 @@ export function CalendarSection({ hoveredSection, setHoveredSection }: CalendarS
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [registrationsKey, setRegistrationsKey] = useState(0);
   const { events, loading } = useEvents();
+  const currentYear = new Date().getFullYear();
 
   const handleRegistrationComplete = () => {
     setRegistrationsKey(prev => prev + 1);
@@ -25,7 +26,7 @@ export function CalendarSection({ hoveredSection, setHoveredSection }: CalendarS
     return (
       <Section
         index={6}
-        title="Arrangementskalender 2025"
+        title={`Arrangementskalender ${currentYear}`}
         icon={<Calendar className="w-6 h-6" />}
         content={<LoadingCalendar />}
         hoveredSection={hoveredSection}
@@ -38,7 +39,7 @@ export function CalendarSection({ hoveredSection, setHoveredSection }: CalendarS
     <>
       <Section
         index={6}
-        title="Arrangementskalender 2025"
+        title={`Arrangementskalender ${currentYear}`}
         icon={<Calendar className="w-6 h-6" />}
         content={
           <CalendarGrid
