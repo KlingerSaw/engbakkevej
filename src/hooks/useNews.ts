@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { NewsItem } from '../types/news';
 
-export function useNews() {
+export function useNews(year: number) {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,7 +20,7 @@ export function useNews() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [year]);
 
   const fetchNews = async () => {
     try {
@@ -28,8 +28,8 @@ export function useNews() {
         .from('news')
         .select('*')
         .eq('published', true)
-        .order('created_at', { ascending: false })
-        .limit(5);
+        .eq('year', year)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setNews(data || []);

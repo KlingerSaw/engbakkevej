@@ -22,16 +22,18 @@ export function YearProvider({ children }: { children: React.ReactNode }) {
     try {
       const years = new Set<number>();
 
-      const [eventsData, boardMeetingsData, generalMeetingsData, boardMembersData] = await Promise.all([
+      const [eventsData, boardMeetingsData, generalMeetingsData, boardMembersData, newsData] = await Promise.all([
         supabase.from('events').select('year'),
         supabase.from('board_meetings').select('year'),
         supabase.from('general_meetings').select('year'),
-        supabase.from('board_members').select('start_year, end_year')
+        supabase.from('board_members').select('start_year, end_year'),
+        supabase.from('news').select('year')
       ]);
 
       eventsData.data?.forEach(item => item.year && years.add(item.year));
       boardMeetingsData.data?.forEach(item => item.year && years.add(item.year));
       generalMeetingsData.data?.forEach(item => item.year && years.add(item.year));
+      newsData.data?.forEach(item => item.year && years.add(item.year));
 
       boardMembersData.data?.forEach(member => {
         years.add(member.start_year);

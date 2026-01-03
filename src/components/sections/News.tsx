@@ -3,6 +3,7 @@ import { Newspaper, Heart } from 'lucide-react';
 import { Section } from '../Section';
 import { useNews } from '../../hooks/useNews';
 import { NewsLikes } from '../news/NewsLikes';
+import { useYear } from '../../contexts/YearContext';
 
 interface NewsSectionProps {
   hoveredSection: number | null;
@@ -10,7 +11,8 @@ interface NewsSectionProps {
 }
 
 export function NewsSection({ hoveredSection, setHoveredSection }: NewsSectionProps) {
-  const { news, loading } = useNews();
+  const { selectedYear } = useYear();
+  const { news, loading } = useNews(selectedYear);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('da-DK', {
@@ -24,7 +26,7 @@ export function NewsSection({ hoveredSection, setHoveredSection }: NewsSectionPr
     return (
       <Section
         index={1}
-        title="Nyheder"
+        title={`Nyheder ${selectedYear}`}
         icon={<Newspaper className="w-6 h-6" />}
         content={
           <div className="space-y-4">
@@ -46,12 +48,12 @@ export function NewsSection({ hoveredSection, setHoveredSection }: NewsSectionPr
   return (
     <Section
       index={1}
-      title="Nyheder"
+      title={`Nyheder ${selectedYear}`}
       icon={<Newspaper className="w-6 h-6" />}
       content={
         <div className="space-y-4">
           {news.length === 0 ? (
-            <p className="text-center text-gray-500">Ingen nyheder endnu</p>
+            <p className="text-center text-gray-500">Ingen nyheder i {selectedYear}</p>
           ) : (
             news.map((item) => (
               <div key={item.id} className="bg-white/20 rounded-lg p-4">
