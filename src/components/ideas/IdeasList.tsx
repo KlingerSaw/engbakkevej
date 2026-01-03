@@ -26,7 +26,7 @@ export function IdeasList() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
+
       const ideasWithUpvotes = data?.map(idea => ({
         ...idea,
         upvotes: idea.upvotes[0]?.count || 0
@@ -40,6 +40,10 @@ export function IdeasList() {
       const years = Array.from(new Set(ideasWithUpvotes.map(i => new Date(i.created_at).getFullYear())));
       years.sort((a, b) => b - a);
       setAvailableYears(years);
+
+      if (years.length > 0 && selectedYear === new Date().getFullYear() && !years.includes(selectedYear)) {
+        setSelectedYear(years[0]);
+      }
     } catch (error) {
       console.error('Error fetching ideas:', error);
       toast.error('Kunne ikke hente ideer');
