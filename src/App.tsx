@@ -53,28 +53,30 @@ function App() {
         />
 
         {/* Board Meetings Section */}
-        <BoardMeetingsSection 
+        <BoardMeetingsSection
+          hoveredSection={hoveredSection}
+          setHoveredSection={setHoveredSection}
+        />
+
+        {/* General Meeting Section */}
+        <GeneralMeetingSection
           hoveredSection={hoveredSection}
           setHoveredSection={setHoveredSection}
         />
 
         {/* Facebook Section */}
-        <FacebookSection 
+        <FacebookSection
           hoveredSection={hoveredSection}
           setHoveredSection={setHoveredSection}
         />
 
-        {/* Three Column Grid */}
-        <div className="grid md:grid-cols-3 gap-8">
-          <ActivitiesSection 
+        {/* Two Column Grid */}
+        <div className="grid md:grid-cols-2 gap-8">
+          <ActivitiesSection
             hoveredSection={hoveredSection}
             setHoveredSection={setHoveredSection}
           />
-          <GeneralMeetingSection 
-            hoveredSection={hoveredSection}
-            setHoveredSection={setHoveredSection}
-          />
-          <FeesSection 
+          <FeesSection
             hoveredSection={hoveredSection}
             setHoveredSection={setHoveredSection}
           />
