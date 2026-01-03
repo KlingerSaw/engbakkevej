@@ -37,7 +37,7 @@ Deno.serve(async (req: Request) => {
     const { email } = await req.json();
 
     // Only allow René's email
-    const allowedEmail = "rene@engbakken.dk"; // Update with actual email
+    const allowedEmail = "rene@lind.pm";
     if (email !== allowedEmail) {
       return new Response(
         JSON.stringify({ error: "Kun formanden må uploade referater" }),
