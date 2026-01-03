@@ -10,6 +10,8 @@ export function IdeasList() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
   const deviceId = getDeviceId();
 
   const fetchIdeas = async () => {
@@ -25,17 +27,19 @@ export function IdeasList() {
 
       if (error) throw error;
       
-      // Transform the data to include the upvote count
       const ideasWithUpvotes = data?.map(idea => ({
         ...idea,
         upvotes: idea.upvotes[0]?.count || 0
       })) || [];
-      
-      // Sort by upvotes count
+
       ideasWithUpvotes.sort((a, b) => b.upvotes - a.upvotes);
-      
+
       console.log('Fetched ideas:', ideasWithUpvotes);
       setIdeas(ideasWithUpvotes);
+
+      const years = Array.from(new Set(ideasWithUpvotes.map(i => new Date(i.created_at).getFullYear())));
+      years.sort((a, b) => b - a);
+      setAvailableYears(years);
     } catch (error) {
       console.error('Error fetching ideas:', error);
       toast.error('Kunne ikke hente ideer');
@@ -108,25 +112,41 @@ export function IdeasList() {
     );
   }
 
+  const filteredIdeas = ideas.filter(i => new Date(i.created_at).getFullYear() === selectedYear);
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-center">
+      <div className="flex gap-3 items-center">
         <button
           onClick={() => setShowForm(true)}
-          className="bg-brand-blue px-6 py-3 text-white rounded-lg hover:bg-brand-blue-dark transition-colors"
+          className="flex-1 bg-brand-blue px-6 py-3 text-white rounded-lg hover:bg-brand-blue-dark transition-colors"
         >
           Del din idé
         </button>
+
+        {availableYears.length > 0 && (
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="px-4 py-3 border border-white/20 bg-white/10 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-transparent font-medium text-white"
+          >
+            {availableYears.map(year => (
+              <option key={year} value={year} className="bg-gray-800">
+                {year}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {showForm && (
         <IdeaForm onIdeaAdded={handleIdeaAdded} />
       )}
-      
-      {ideas.length === 0 ? (
-        <p className="text-center">Ingen ideer endnu. Vær den første til at dele en idé!</p>
+
+      {filteredIdeas.length === 0 ? (
+        <p className="text-center">Ingen ideer i {selectedYear}.</p>
       ) : (
-        ideas.map((idea) => (
+        filteredIdeas.map((idea) => (
           <IdeaCard 
             key={idea.id} 
             idea={idea} 
