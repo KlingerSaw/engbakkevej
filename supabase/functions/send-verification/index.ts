@@ -77,15 +77,47 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // In production, you would send an email here
-    // For now, we'll just return the code (REMOVE THIS IN PRODUCTION!)
-    console.log(`Verification code for ${email}: ${code}`);
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+
+    if (resendApiKey) {
+      try {
+        const emailResponse = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "Engbakken <noreply@engbakken.dk>",
+            to: [email],
+            subject: "Din verifikationskode til Engbakken",
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #059669;">Engbakken Verifikationskode</h2>
+                <p>Din verifikationskode er:</p>
+                <div style="background-color: #f3f4f6; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+                  <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #059669;">${code}</span>
+                </div>
+                <p>Koden er gyldig i 15 minutter.</p>
+                <p style="color: #6b7280; font-size: 14px;">Hvis du ikke har anmodet om denne kode, kan du ignorere denne e-mail.</p>
+              </div>
+            `,
+          }),
+        });
+
+        if (!emailResponse.ok) {
+          console.error("Failed to send email:", await emailResponse.text());
+        }
+      } catch (emailError) {
+        console.error("Error sending email:", emailError);
+      }
+    } else {
+      console.log(`DEVELOPMENT MODE - Verification code for ${email}: ${code}`);
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
-        // DEVELOPMENT ONLY - REMOVE IN PRODUCTION
-        code: code,
         message: "Verifikationskode sendt til din email"
       }),
       {

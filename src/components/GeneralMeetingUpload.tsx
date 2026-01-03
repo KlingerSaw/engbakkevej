@@ -23,7 +23,6 @@ export default function GeneralMeetingUpload({
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [devCode, setDevCode] = useState<string | null>(null);
 
   const [meetingDate, setMeetingDate] = useState(prefillDate || '');
   const [location, setLocation] = useState(prefillLocation || '');
@@ -61,13 +60,7 @@ export default function GeneralMeetingUpload({
         throw new Error(data.error || 'Kunne ikke sende verifikationskode');
       }
 
-      if (data.code) {
-        setDevCode(data.code);
-        toast.success(`Verifikationskode: ${data.code}`, { duration: 10000 });
-      } else {
-        toast.success('Verifikationskode sendt til din email!');
-      }
-
+      toast.success('Verifikationskode sendt til din email!');
       setStep('verify');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Der opstod en fejl');
@@ -118,7 +111,6 @@ export default function GeneralMeetingUpload({
       setStep('email');
       setEmail('');
       setCode('');
-      setDevCode(null);
       setMeetingDate('');
       setLocation('');
       setMeetingType('ordinær');
@@ -178,13 +170,6 @@ export default function GeneralMeetingUpload({
               <Lock className="w-4 h-4 inline mr-2" />
               En 6-cifret kode er blevet sendt til din email. Koden er gyldig i 15 minutter.
             </p>
-            {devCode && (
-              <div className="mt-3 p-3 bg-yellow-100 border border-yellow-300 rounded">
-                <p className="text-sm font-semibold text-yellow-900">
-                  DEVELOPMENT MODE - Din kode er: <span className="text-2xl font-mono tracking-widest">{devCode}</span>
-                </p>
-              </div>
-            )}
           </div>
 
           <div>

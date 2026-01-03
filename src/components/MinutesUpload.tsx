@@ -49,13 +49,7 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
         throw new Error(data.error || 'Kunne ikke sende verifikationskode');
       }
 
-      // DEVELOPMENT: Show the code in a toast
-      if (data.code) {
-        toast.success(`Kode sendt! (Dev mode: ${data.code})`);
-      } else {
-        toast.success('Verifikationskode sendt til din email!');
-      }
-
+      toast.success('Verifikationskode sendt til din email!');
       setStep('verify');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Der opstod en fejl');
