@@ -11,8 +11,19 @@ export interface BoardMember {
   end_year: number | null;
 }
 
+export interface CategorizedBoardMembers {
+  allMembers: BoardMember[];
+  newMembers: BoardMember[];
+  departedMembers: BoardMember[];
+}
+
 export function useBoardMembers(year?: number) {
   const [members, setMembers] = useState<BoardMember[]>([]);
+  const [categorized, setCategorized] = useState<CategorizedBoardMembers>({
+    allMembers: [],
+    newMembers: [],
+    departedMembers: []
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,7 +56,26 @@ export function useBoardMembers(year?: number) {
       const { data, error } = await query.order('position');
 
       if (error) throw error;
-      setMembers(data || []);
+
+      const allMembers = data || [];
+      setMembers(allMembers);
+
+      if (year) {
+        const newMembers = allMembers.filter(m => m.start_year === year);
+        const departedMembers = allMembers.filter(m => m.end_year === year);
+
+        setCategorized({
+          allMembers,
+          newMembers,
+          departedMembers
+        });
+      } else {
+        setCategorized({
+          allMembers,
+          newMembers: [],
+          departedMembers: []
+        });
+      }
     } catch (error) {
       console.error('Error fetching board members:', error);
       toast.error('Kunne ikke hente bestyrelsesmedlemmer');
@@ -54,5 +84,5 @@ export function useBoardMembers(year?: number) {
     }
   };
 
-  return { members, loading };
+  return { members, categorized, loading };
 }
