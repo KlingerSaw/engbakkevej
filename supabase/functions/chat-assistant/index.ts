@@ -65,12 +65,13 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const [eventsResult, newsResult, bylawsResult, ideasResult, boardMeetingsResult] = await Promise.all([
+    const [eventsResult, newsResult, bylawsResult, ideasResult, boardMeetingsResult, generalMeetingsResult] = await Promise.all([
       supabase.from("events").select("*").order("date", { ascending: true }),
       supabase.from("news").select("*").eq("published", true).order("created_at", { ascending: false }).limit(5),
       supabase.from("bylaws").select("*").order("section_number", { ascending: true }),
       supabase.from("ideas").select("*").order("created_at", { ascending: false }).limit(10),
-      supabase.from("board_meetings").select("*").order("date", { ascending: false }).limit(5)
+      supabase.from("board_meetings").select("*").order("date", { ascending: false }).limit(5),
+      supabase.from("general_meetings").select("*").order("date", { ascending: false }).limit(5)
     ]);
 
     const events = eventsResult.data || [];
@@ -78,6 +79,7 @@ Deno.serve(async (req: Request) => {
     const bylaws = bylawsResult.data || [];
     const ideas = ideasResult.data || [];
     const boardMeetings = boardMeetingsResult.data || [];
+    const generalMeetings = generalMeetingsResult.data || [];
 
     const formatDate = (dateStr: string) => {
       try {
@@ -115,6 +117,16 @@ Deno.serve(async (req: Request) => {
           return `MØDE ${dateStr} - ${location}:\n${minutes}...`;
         }).join('\n\n')
       : 'Ingen mødereferater';
+
+    const generalMeetingsText = generalMeetings.length > 0
+      ? generalMeetings.map(m => {
+          const dateStr = formatDate(m.date);
+          const location = m.location || 'Ukendt lokation';
+          const type = m.type === 'ordinær' ? 'Ordinær' : 'Ekstraordinær';
+          const minutes = m.minutes_text ? stripHtml(m.minutes_text).substring(0, 500) : 'Intet referat tilgængeligt';
+          return `${type.toUpperCase()} GENERALFORSAMLING ${dateStr} - ${location}:\n${minutes}...`;
+        }).join('\n\n')
+      : 'Ingen generalforsamlinger';
 
     const systemPrompt = `Du er en hjælpsom assistent for Grundejerforeningen Engbakken på Engbakkevej nr. 8-38 i Viborg. Du skal kun svare baseret på information fra foreningens hjemmeside og database.
 
@@ -162,7 +174,10 @@ ${ideasText}
 BESTYRELSESMØDER OG REFERATER:
 ${boardMeetingsText}
 
-Svar altid på dansk. Vær venlig og hjælpsom. Når du svarer om bestyrelsesmøder, giv konkrete detaljer fra referaterne. Hvis du ikke har information om noget, sig det ærligt og foreslå at bruge kontaktformularen på hjemmesiden. Når du svarer om kontingent, husk at nævne både kontingentet (1600 kr.) og vejfondet (400 kr.).`;
+GENERALFORSAMLINGER OG REFERATER:
+${generalMeetingsText}
+
+Svar altid på dansk. Vær venlig og hjælpsom. Når du svarer om bestyrelsesmøder eller generalforsamlinger, giv konkrete detaljer fra referaterne. Hvis du ikke har information om noget, sig det ærligt og foreslå at bruge kontaktformularen på hjemmesiden. Når du svarer om kontingent, husk at nævne både kontingentet (1600 kr.) og vejfondet (400 kr.).`;
 
     const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
