@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { generatePDF } from '../utils/pdf';
 import GeneralMeetingUploadModal from './GeneralMeetingUploadModal';
+import { useYear } from '../contexts/YearContext';
 
 interface GeneralMeeting {
   id: string;
@@ -21,8 +22,7 @@ export function GeneralMeetingsList() {
   const [loading, setLoading] = useState(true);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<GeneralMeeting | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const { selectedYear } = useYear();
 
   useEffect(() => {
     fetchMeetings();
@@ -50,10 +50,6 @@ export function GeneralMeetingsList() {
 
       const allMeetings = dbMeetings || [];
       setMeetings(allMeetings);
-
-      const years = Array.from(new Set(allMeetings.map(m => new Date(m.date).getFullYear())));
-      years.sort((a, b) => b - a);
-      setAvailableYears(years);
     } catch (error) {
       console.error('Error fetching meetings:', error);
       toast.error('Kunne ikke hente generalforsamlinger');
@@ -144,20 +140,6 @@ export function GeneralMeetingsList() {
           <Plus className="w-5 h-5" />
           Opret ny generalforsamling
         </button>
-
-        {availableYears.length > 0 && (
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="px-4 py-3 border border-white/20 bg-white/10 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-transparent font-medium text-white"
-          >
-            {availableYears.map(year => (
-              <option key={year} value={year} className="bg-gray-800">
-                {year}
-              </option>
-            ))}
-          </select>
-        )}
       </div>
 
       {filteredMeetings.length === 0 ? (

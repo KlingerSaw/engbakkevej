@@ -13,13 +13,16 @@ import { BylawsSection } from './components/sections/Bylaws';
 import { ContactForm } from './components/ContactForm';
 import { Chatbot } from './components/Chatbot';
 import MinutesUpload from './components/MinutesUpload';
+import { YearProvider } from './contexts/YearContext';
+import { GlobalYearSelector } from './components/GlobalYearSelector';
 
 function App() {
   const [hoveredSection, setHoveredSection] = useState<number | null>(null);
   const [showUpload, setShowUpload] = useState(false);
 
   return (
-    <div className="min-h-screen bg-brand-blue-lighter p-8">
+    <YearProvider>
+      <div className="min-h-screen bg-brand-blue-lighter p-8 pb-24">
       {/* Header */}
       <div className="max-w-6xl mx-auto mb-12 text-center">
         <h1 className="text-4xl font-bold text-brand-blue mb-4">Grundejerforeningen Engbakken</h1>
@@ -120,7 +123,11 @@ function App() {
 
       {/* Chatbot */}
       <Chatbot />
+
+      {/* Global Year Selector */}
+      <GlobalYearSelector />
     </div>
+    </YearProvider>
   );
 }
 
