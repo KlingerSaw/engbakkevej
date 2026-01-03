@@ -47,19 +47,19 @@ function App() {
         />
 
         {/* Ideas Section */}
-        <IdeasSection 
-          hoveredSection={hoveredSection}
-          setHoveredSection={setHoveredSection}
-        />
-
-        {/* Board Meetings Section */}
-        <BoardMeetingsSection
+        <IdeasSection
           hoveredSection={hoveredSection}
           setHoveredSection={setHoveredSection}
         />
 
         {/* General Meeting Section */}
         <GeneralMeetingSection
+          hoveredSection={hoveredSection}
+          setHoveredSection={setHoveredSection}
+        />
+
+        {/* Board Meetings Section */}
+        <BoardMeetingsSection
           hoveredSection={hoveredSection}
           setHoveredSection={setHoveredSection}
         />
