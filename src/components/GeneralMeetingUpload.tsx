@@ -26,6 +26,8 @@ export default function GeneralMeetingUpload({
   const [meetingDate, setMeetingDate] = useState(prefillDate || '');
   const [location, setLocation] = useState(prefillLocation || '');
   const [meetingType, setMeetingType] = useState<'ordinær' | 'ekstraordinær'>(prefillType || 'ordinær');
+  const [boardProposalHtml, setBoardProposalHtml] = useState('');
+  const [boardReportHtml, setBoardReportHtml] = useState('');
   const [minutesHtml, setMinutesHtml] = useState('');
 
   useEffect(() => {
@@ -74,20 +76,24 @@ export default function GeneralMeetingUpload({
   const handleVerifyAndUpload = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!meetingDate || !location || !meetingType || !minutesHtml) {
-      toast.error('Udfyld alle felter');
+    if (!meetingDate || !location || !meetingType) {
+      toast.error('Udfyld dato, sted og type');
       return;
     }
 
     setIsLoading(true);
 
     try {
+      const updateData: any = {
+        board_proposal_text: boardProposalHtml || null,
+        board_report_text: boardReportHtml || null,
+        minutes_text: minutesHtml || null,
+      };
+
       if (meetingId) {
         const { error } = await supabase
           .from('general_meetings')
-          .update({
-            minutes_text: minutesHtml,
-          })
+          .update(updateData)
           .eq('id', meetingId);
 
         if (error) throw error;
@@ -98,13 +104,13 @@ export default function GeneralMeetingUpload({
             date: meetingDate,
             type: meetingType,
             location,
-            minutes_text: minutesHtml,
+            ...updateData,
           });
 
         if (error) throw error;
       }
 
-      toast.success(meetingId ? 'Referat opdateret!' : 'Generalforsamling oprettet!');
+      toast.success(meetingId ? 'Dokumenter opdateret!' : 'Generalforsamling oprettet!');
 
       setStep('email');
       setEmail('');
@@ -112,6 +118,8 @@ export default function GeneralMeetingUpload({
       setMeetingDate('');
       setLocation('');
       setMeetingType('ordinær');
+      setBoardProposalHtml('');
+      setBoardReportHtml('');
       setMinutesHtml('');
 
       if (onClose) {
@@ -229,6 +237,42 @@ export default function GeneralMeetingUpload({
             />
           </div>
 
+          {meetingType === 'ordinær' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Forslag til bestyrelse (HTML)
+                </label>
+                <textarea
+                  value={boardProposalHtml}
+                  onChange={(e) => setBoardProposalHtml(e.target.value)}
+                  placeholder="Indsæt HTML her... (valgfrit)"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                  rows={6}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Hvis tomt vises "Ingen rettidig indkommet"
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Bestyrelsens beretning (HTML)
+                </label>
+                <textarea
+                  value={boardReportHtml}
+                  onChange={(e) => setBoardReportHtml(e.target.value)}
+                  placeholder="Indsæt HTML her... (valgfrit)"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                  rows={6}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Hvis tomt vises "Ingen rettidig indkommet"
+                </p>
+              </div>
+            </>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Referat (HTML)
@@ -236,10 +280,9 @@ export default function GeneralMeetingUpload({
             <textarea
               value={minutesHtml}
               onChange={(e) => setMinutesHtml(e.target.value)}
-              placeholder="Indsæt HTML fra referat her..."
+              placeholder="Indsæt HTML fra referat her... (valgfrit)"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
-              rows={12}
-              required
+              rows={6}
             />
             <p className="text-xs text-gray-500 mt-1">
               Du kan kopiere hele HTML-dokumentet herfra

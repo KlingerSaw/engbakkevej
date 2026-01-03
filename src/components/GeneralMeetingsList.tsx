@@ -11,6 +11,8 @@ interface GeneralMeeting {
   date: string;
   type: 'ordinær' | 'ekstraordinær';
   location: string;
+  board_proposal_text: string | null;
+  board_report_text: string | null;
   minutes_text: string | null;
 }
 
@@ -52,8 +54,12 @@ export function GeneralMeetingsList() {
     }
   }
 
-  const handleDownloadMinutes = async (meeting: GeneralMeeting) => {
-    if (!meeting.minutes_text) return;
+  const handleDownloadDocument = async (
+    meeting: GeneralMeeting,
+    content: string | null,
+    type: 'proposal' | 'report' | 'minutes'
+  ) => {
+    if (!content) return;
 
     const date = new Date(meeting.date).toLocaleDateString('da-DK', {
       year: 'numeric',
@@ -61,11 +67,23 @@ export function GeneralMeetingsList() {
       day: 'numeric'
     });
 
+    const titles = {
+      proposal: `Forslag til bestyrelse - ${meeting.type} generalforsamling - ${date}`,
+      report: `Bestyrelsens beretning - ${meeting.type} generalforsamling - ${date}`,
+      minutes: `Referat - ${meeting.type} generalforsamling - ${date}`
+    };
+
+    const filenames = {
+      proposal: `Forslag-til-bestyrelse-${date}.pdf`,
+      report: `Bestyrelsens-beretning-${date}.pdf`,
+      minutes: `Referat-Generalforsamling-${date}.pdf`
+    };
+
     try {
       await generatePDF({
-        title: `Referat - ${meeting.type} generalforsamling - ${date}`,
-        content: meeting.minutes_text,
-        filename: `Referat-Generalforsamling-${date}.pdf`
+        title: titles[type],
+        content,
+        filename: filenames[type]
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -190,8 +208,8 @@ export function GeneralMeetingsList() {
                         {meeting.location}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {isPastDate(meeting.date) && !meeting.minutes_text && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      {isPastDate(meeting.date) && !meeting.minutes_text && !meeting.board_proposal_text && !meeting.board_report_text && (
                         <motion.button
                           onClick={() => handleOpenUploadModal(meeting)}
                           className="flex items-center gap-1 text-sm bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600 transition-colors"
@@ -199,20 +217,52 @@ export function GeneralMeetingsList() {
                           whileTap={{ scale: 0.95 }}
                         >
                           <Upload className="w-4 h-4" />
-                          <span>Upload referat</span>
+                          <span>Upload dokumenter</span>
                         </motion.button>
                       )}
-                      {meeting.minutes_text && (
-                        <motion.button
-                          onClick={() => handleDownloadMinutes(meeting)}
-                          className="flex items-center gap-1 text-sm text-brand-blue hover:text-white transition-colors group-hover:text-white"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <FileText className="w-4 h-4" />
-                          <span>Hent referat</span>
-                        </motion.button>
+                      {meeting.type === 'ordinær' && (
+                        <>
+                          <motion.button
+                            onClick={() => handleDownloadDocument(meeting, meeting.board_proposal_text, 'proposal')}
+                            className={`flex items-center gap-1 text-sm px-3 py-1 rounded transition-colors ${
+                              meeting.board_proposal_text
+                                ? 'text-brand-blue hover:text-white group-hover:text-white'
+                                : 'text-gray-400 italic cursor-default'
+                            }`}
+                            whileHover={meeting.board_proposal_text ? { scale: 1.05 } : {}}
+                            whileTap={meeting.board_proposal_text ? { scale: 0.95 } : {}}
+                          >
+                            <FileText className="w-4 h-4" />
+                            <span>{meeting.board_proposal_text ? 'Forslag til bestyrelse' : 'Ingen rettidig indkommet'}</span>
+                          </motion.button>
+                          <motion.button
+                            onClick={() => handleDownloadDocument(meeting, meeting.board_report_text, 'report')}
+                            className={`flex items-center gap-1 text-sm px-3 py-1 rounded transition-colors ${
+                              meeting.board_report_text
+                                ? 'text-brand-blue hover:text-white group-hover:text-white'
+                                : 'text-gray-400 italic cursor-default'
+                            }`}
+                            whileHover={meeting.board_report_text ? { scale: 1.05 } : {}}
+                            whileTap={meeting.board_report_text ? { scale: 0.95 } : {}}
+                          >
+                            <FileText className="w-4 h-4" />
+                            <span>{meeting.board_report_text ? 'Bestyrelsens beretning' : 'Ingen rettidig indkommet'}</span>
+                          </motion.button>
+                        </>
                       )}
+                      <motion.button
+                        onClick={() => handleDownloadDocument(meeting, meeting.minutes_text, 'minutes')}
+                        className={`flex items-center gap-1 text-sm px-3 py-1 rounded transition-colors ${
+                          meeting.minutes_text
+                            ? 'text-brand-blue hover:text-white group-hover:text-white'
+                            : 'text-gray-400 italic cursor-default'
+                        }`}
+                        whileHover={meeting.minutes_text ? { scale: 1.05 } : {}}
+                        whileTap={meeting.minutes_text ? { scale: 0.95 } : {}}
+                      >
+                        <FileText className="w-4 h-4" />
+                        <span>{meeting.minutes_text ? 'Referat' : 'Ikke tilgængeligt'}</span>
+                      </motion.button>
                     </div>
                   </div>
                 </motion.div>
