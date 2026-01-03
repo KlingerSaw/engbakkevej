@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Event } from '../types/events';
 
-export function useEvents() {
+export function useEvents(year?: number) {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,14 +20,19 @@ export function useEvents() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [year]);
 
   const fetchEvents = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('events')
-        .select('*')
-        .order('date');
+        .select('*');
+
+      if (year) {
+        query = query.eq('year', year);
+      }
+
+      const { data, error } = await query.order('date');
 
       if (error) throw error;
       setEvents(data || []);
