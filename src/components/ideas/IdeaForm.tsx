@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { getDeviceId } from '../../lib/deviceId';
 import { HouseVerification } from '../shared/HouseVerification';
 import { Idea } from '../../types/ideas';
+import { useYear } from '../../contexts/YearContext';
 
 interface IdeaFormProps {
   onIdeaAdded: (idea: Idea | null) => void;
@@ -24,6 +25,7 @@ export function IdeaForm({ onIdeaAdded, existingIdea }: IdeaFormProps) {
   const [showHouseVerification, setShowHouseVerification] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const { selectedYear } = useYear();
   const deviceId = getDeviceId();
 
   const clearForm = () => {
@@ -98,6 +100,7 @@ export function IdeaForm({ onIdeaAdded, existingIdea }: IdeaFormProps) {
           description,
           house_number: houseNumber,
           device_id: deviceId,
+          year: selectedYear,
           upvotes: 0,
           upvoted_by: [],
           attachment_url: fileUrl
@@ -112,7 +115,7 @@ export function IdeaForm({ onIdeaAdded, existingIdea }: IdeaFormProps) {
         if (error) throw error;
 
         toast.success('Din idé er blevet tilføjet!');
-        clearForm(); // Clear the form after successful submission
+        clearForm();
         setShowHouseVerification(false);
         onIdeaAdded(data);
       }
