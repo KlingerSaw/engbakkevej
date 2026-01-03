@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Upload, Mail, Lock, Calendar, MapPin, FileText } from 'lucide-react';
+import DocumentUploadField from './DocumentUploadField';
 
 interface GeneralMeetingUploadProps {
   meetingId?: string;
@@ -22,6 +23,7 @@ export default function GeneralMeetingUpload({
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [devCode, setDevCode] = useState<string | null>(null);
 
   const [meetingDate, setMeetingDate] = useState(prefillDate || '');
   const [location, setLocation] = useState(prefillLocation || '');
@@ -60,7 +62,8 @@ export default function GeneralMeetingUpload({
       }
 
       if (data.code) {
-        toast.success(`Kode sendt! (Dev mode: ${data.code})`);
+        setDevCode(data.code);
+        toast.success(`Verifikationskode: ${data.code}`, { duration: 10000 });
       } else {
         toast.success('Verifikationskode sendt til din email!');
       }
@@ -115,6 +118,7 @@ export default function GeneralMeetingUpload({
       setStep('email');
       setEmail('');
       setCode('');
+      setDevCode(null);
       setMeetingDate('');
       setLocation('');
       setMeetingType('ordinær');
@@ -174,6 +178,13 @@ export default function GeneralMeetingUpload({
               <Lock className="w-4 h-4 inline mr-2" />
               En 6-cifret kode er blevet sendt til din email. Koden er gyldig i 15 minutter.
             </p>
+            {devCode && (
+              <div className="mt-3 p-3 bg-yellow-100 border border-yellow-300 rounded">
+                <p className="text-sm font-semibold text-yellow-900">
+                  DEVELOPMENT MODE - Din kode er: <span className="text-2xl font-mono tracking-widest">{devCode}</span>
+                </p>
+              </div>
+            )}
           </div>
 
           <div>
@@ -238,55 +249,28 @@ export default function GeneralMeetingUpload({
 
           {meetingType === 'ordinær' && (
             <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Forslag til bestyrelse (HTML)
-                </label>
-                <textarea
-                  value={boardProposalHtml}
-                  onChange={(e) => setBoardProposalHtml(e.target.value)}
-                  placeholder="Indsæt HTML her... (valgfrit)"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
-                  rows={6}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Hvis tomt vises "Ingen rettidig indkommet"
-                </p>
-              </div>
+              <DocumentUploadField
+                label="Forslag til bestyrelse"
+                value={boardProposalHtml}
+                onChange={setBoardProposalHtml}
+                optional
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bestyrelsens beretning (HTML)
-                </label>
-                <textarea
-                  value={boardReportHtml}
-                  onChange={(e) => setBoardReportHtml(e.target.value)}
-                  placeholder="Indsæt HTML her... (valgfrit)"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
-                  rows={6}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Hvis tomt vises "Ingen rettidig indkommet"
-                </p>
-              </div>
+              <DocumentUploadField
+                label="Bestyrelsens beretning"
+                value={boardReportHtml}
+                onChange={setBoardReportHtml}
+                optional
+              />
             </>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Referat (HTML)
-            </label>
-            <textarea
-              value={minutesHtml}
-              onChange={(e) => setMinutesHtml(e.target.value)}
-              placeholder="Indsæt HTML fra referat her... (valgfrit)"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
-              rows={6}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Du kan kopiere hele HTML-dokumentet herfra
-            </p>
-          </div>
+          <DocumentUploadField
+            label="Referat"
+            value={minutesHtml}
+            onChange={setMinutesHtml}
+            optional
+          />
 
           <div className="flex gap-3">
             <button
