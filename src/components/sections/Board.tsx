@@ -58,7 +58,7 @@ export function BoardSection({ hoveredSection, setHoveredSection }: BoardSection
               {sortedNewMembers.length > 0 && (
                 <div>
                   <h3 className="text-lg font-semibold mb-4 text-green-700">
-                    Nye medlemmer i {selectedYear}
+                    Nye medlemmer efter generalforsamling
                   </h3>
                   <div className="grid md:grid-cols-3 gap-4">
                     {sortedNewMembers.map(renderMemberCard)}
@@ -69,7 +69,7 @@ export function BoardSection({ hoveredSection, setHoveredSection }: BoardSection
               {sortedDepartedMembers.length > 0 && (
                 <div>
                   <h3 className="text-lg font-semibold mb-4 text-red-700">
-                    Fratrådte medlemmer i {selectedYear}
+                    Afgående medlemmer
                   </h3>
                   <div className="grid md:grid-cols-3 gap-4">
                     {sortedDepartedMembers.map(renderMemberCard)}
