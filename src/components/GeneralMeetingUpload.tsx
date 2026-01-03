@@ -152,7 +152,6 @@ export default function GeneralMeetingUpload({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="rene@lind.pm"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               required
             />
