@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
-import { Upload, Mail, Lock, Calendar, MapPin } from 'lucide-react';
+import { Upload, Lock, Calendar, MapPin } from 'lucide-react';
 
 interface MinutesUploadProps {
   meetingId?: string;
@@ -11,10 +10,11 @@ interface MinutesUploadProps {
 }
 
 export default function MinutesUpload({ meetingId, prefillDate, prefillLocation, onClose }: MinutesUploadProps = {}) {
-  const [step, setStep] = useState<'email' | 'verify' | 'upload'>('email');
-  const [email, setEmail] = useState('');
+  const CHAIRMAN_EMAIL = 'rene@lind.pm';
+  const [step, setStep] = useState<'verify' | 'upload'>('verify');
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
 
   // Form data
   const [meetingDate, setMeetingDate] = useState(prefillDate || '');
@@ -26,8 +26,13 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
     if (prefillLocation) setLocation(prefillLocation);
   }, [prefillDate, prefillLocation]);
 
-  const handleSendCode = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (!codeSent) {
+      handleSendCode();
+    }
+  }, [codeSent]);
+
+  const handleSendCode = async () => {
     setIsLoading(true);
 
     try {
@@ -39,7 +44,7 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
             'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({ email: CHAIRMAN_EMAIL }),
         }
       );
 
@@ -49,8 +54,8 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
         throw new Error(data.error || 'Kunne ikke sende verifikationskode');
       }
 
-      toast.success('Verifikationskode sendt til din email!');
-      setStep('verify');
+      toast.success('Verifikationskode sendt til formandens email!');
+      setCodeSent(true);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Der opstod en fejl');
     } finally {
@@ -78,7 +83,7 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            email,
+            email: CHAIRMAN_EMAIL,
             code,
             meetingId,
             meetingData: {
@@ -99,12 +104,12 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
       toast.success('Referat uploadet!');
 
       // Reset form
-      setStep('email');
-      setEmail('');
+      setStep('verify');
       setCode('');
       setMeetingDate('');
       setLocation('');
       setMinutesHtml('');
+      setCodeSent(false);
 
       if (onClose) {
         onClose();
@@ -122,33 +127,6 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
         <Upload className="w-6 h-6 text-emerald-600" />
         <h2 className="text-2xl font-bold text-gray-900">Upload Referat</h2>
       </div>
-
-      {step === 'email' && (
-        <form onSubmit={handleSendCode} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Mail className="w-4 h-4 inline mr-2" />
-              Email (kun formand)
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="rene@engbakken.dk"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-          >
-            {isLoading ? 'Sender...' : 'Send Verifikationskode'}
-          </button>
-        </form>
-      )}
 
       {step === 'verify' && (
         <form onSubmit={handleVerifyAndUpload} className="space-y-4">
@@ -220,25 +198,13 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
             </p>
           </div>
 
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                setStep('email');
-                setCode('');
-              }}
-              className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 transition font-medium"
-            >
-              Tilbage
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="flex-1 bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            >
-              {isLoading ? 'Uploader...' : 'Upload Referat'}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          >
+            {isLoading ? 'Uploader...' : 'Upload Referat'}
+          </button>
         </form>
       )}
     </div>
