@@ -4,6 +4,7 @@ import { FileText, MapPin, Upload, Plus, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { generatePDF } from '../utils/pdf';
+import { formatMeetingDate, formatDateForPDF } from '../utils/dateFormat';
 import GeneralMeetingUploadModal from './GeneralMeetingUploadModal';
 import { useYear } from '../contexts/YearContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -89,11 +90,7 @@ export function GeneralMeetingsList() {
 
     if (!content) return;
 
-    const date = new Date(meeting.date).toLocaleDateString('da-DK', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    const date = formatDateForPDF(meeting.date);
 
     const titles = {
       proposal: `Forslag til bestyrelse - ${meeting.type} generalforsamling - ${date}`,
@@ -209,14 +206,7 @@ export function GeneralMeetingsList() {
                       </span>
                     </div>
                     <h4 className="font-semibold">
-                      {new Date(nextMeeting.date).toLocaleDateString('da-DK', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                      {formatMeetingDate(nextMeeting.date)}
                     </h4>
                     <p className="text-sm mt-1 flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
@@ -247,14 +237,7 @@ export function GeneralMeetingsList() {
                         </span>
                       </div>
                       <h4 className="font-semibold">
-                        {new Date(meeting.date).toLocaleDateString('da-DK', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+                        {formatMeetingDate(meeting.date)}
                       </h4>
                       <p className="text-sm mt-1 flex items-center gap-1">
                         <MapPin className="w-4 h-4" />
