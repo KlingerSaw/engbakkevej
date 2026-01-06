@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Upload, Lock, Calendar, MapPin } from 'lucide-react';
+import DocumentUploadField from './DocumentUploadField';
 
 interface MinutesUploadProps {
   meetingId?: string;
@@ -66,8 +67,13 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
   const handleVerifyAndUpload = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!meetingDate || !location || !minutesHtml) {
-      toast.error('Udfyld alle felter');
+    if (!meetingDate || !location) {
+      toast.error('Udfyld dato og sted');
+      return;
+    }
+
+    if (!minutesHtml) {
+      toast.error('Upload referat');
       return;
     }
 
@@ -181,22 +187,11 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Referat (HTML)
-            </label>
-            <textarea
-              value={minutesHtml}
-              onChange={(e) => setMinutesHtml(e.target.value)}
-              placeholder="Indsæt HTML fra referat her..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
-              rows={12}
-              required
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Du kan kopiere hele HTML-dokumentet herfra
-            </p>
-          </div>
+          <DocumentUploadField
+            label="Referat"
+            value={minutesHtml}
+            onChange={setMinutesHtml}
+          />
 
           <button
             type="submit"
