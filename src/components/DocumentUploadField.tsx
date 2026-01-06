@@ -25,26 +25,46 @@ export default function DocumentUploadField({ label, value, onChange, optional =
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-document`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: formData,
-        }
-      );
+      console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
 
-      const data = await response.json();
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-document`;
+      console.log('Request URL:', url);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: formData,
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      let data;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        console.error('Non-JSON response:', text);
+        throw new Error('Server returnerede ikke JSON. Tjek console for detaljer.');
+      }
+
+      console.log('Response data:', data);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Kunne ikke parse dokument');
+        throw new Error(data.error || `Server fejl: ${response.status}`);
+      }
+
+      if (!data.html) {
+        throw new Error('Ingen HTML modtaget fra server');
       }
 
       onChange(data.html);
       toast.success(`${file.name} parsed succesfuldt!`);
     } catch (error) {
+      console.error('Upload error:', error);
       toast.error(error instanceof Error ? error.message : 'Fejl ved upload');
       setFileName(null);
     } finally {
