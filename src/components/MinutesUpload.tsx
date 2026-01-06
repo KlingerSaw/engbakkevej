@@ -14,11 +14,18 @@ interface MinutesUploadProps {
 export default function MinutesUpload({ meetingId, prefillDate, prefillLocation, onClose }: MinutesUploadProps = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const [meetingDate, setMeetingDate] = useState(prefillDate || '');
+  const [meetingTime, setMeetingTime] = useState('19:00');
   const [location, setLocation] = useState(prefillLocation || '');
   const [minutesFile, setMinutesFile] = useState<File | null>(null);
 
   useEffect(() => {
-    if (prefillDate) setMeetingDate(prefillDate);
+    if (prefillDate) {
+      const dateObj = new Date(prefillDate);
+      const dateStr = dateObj.toISOString().split('T')[0];
+      const timeStr = dateObj.toTimeString().slice(0, 5);
+      setMeetingDate(dateStr);
+      setMeetingTime(timeStr);
+    }
     if (prefillLocation) setLocation(prefillLocation);
   }, [prefillDate, prefillLocation]);
 
@@ -38,6 +45,8 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
     setIsLoading(true);
 
     try {
+      const fullDateTime = `${meetingDate}T${meetingTime}:00`;
+
       const timestamp = Date.now();
       const fileExt = minutesFile.name.split('.').pop();
       const fileName = `${meetingDate}_${timestamp}.${fileExt}`;
@@ -71,7 +80,7 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
         const { error } = await supabase
           .from('board_meetings')
           .insert({
-            date: meetingDate,
+            date: fullDateTime,
             location,
             minutes_file_url: publicUrl,
             minutes_file_name: minutesFile.name,
@@ -84,6 +93,7 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
       toast.success('Referat uploadet!');
 
       setMeetingDate('');
+      setMeetingTime('19:00');
       setLocation('');
       setMinutesFile(null);
 
@@ -105,18 +115,34 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
       </div>
 
       <form onSubmit={handleUpload} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Calendar className="w-4 h-4 inline mr-2" />
-            Mødedato
-          </label>
-          <input
-            type="date"
-            value={meetingDate}
-            onChange={(e) => setMeetingDate(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            required
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Calendar className="w-4 h-4 inline mr-2" />
+              Mødedato
+            </label>
+            <input
+              type="date"
+              value={meetingDate}
+              onChange={(e) => setMeetingDate(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Calendar className="w-4 h-4 inline mr-2" />
+              Tidspunkt
+            </label>
+            <input
+              type="time"
+              value={meetingTime}
+              onChange={(e) => setMeetingTime(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              required
+            />
+          </div>
         </div>
 
         <div>

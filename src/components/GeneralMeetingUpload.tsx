@@ -21,6 +21,7 @@ export default function GeneralMeetingUpload({
 }: GeneralMeetingUploadProps = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const [meetingDate, setMeetingDate] = useState(prefillDate || '');
+  const [meetingTime, setMeetingTime] = useState('19:00');
   const [location, setLocation] = useState(prefillLocation || '');
   const [meetingType, setMeetingType] = useState<'ordinær' | 'ekstraordinær'>(prefillType || 'ordinær');
   const [boardProposalFile, setBoardProposalFile] = useState<File | null>(null);
@@ -28,7 +29,13 @@ export default function GeneralMeetingUpload({
   const [minutesFile, setMinutesFile] = useState<File | null>(null);
 
   useEffect(() => {
-    if (prefillDate) setMeetingDate(prefillDate);
+    if (prefillDate) {
+      const dateObj = new Date(prefillDate);
+      const dateStr = dateObj.toISOString().split('T')[0];
+      const timeStr = dateObj.toTimeString().slice(0, 5);
+      setMeetingDate(dateStr);
+      setMeetingTime(timeStr);
+    }
     if (prefillLocation) setLocation(prefillLocation);
     if (prefillType) setMeetingType(prefillType);
   }, [prefillDate, prefillLocation, prefillType]);
@@ -44,6 +51,7 @@ export default function GeneralMeetingUpload({
     setIsLoading(true);
 
     try {
+      const fullDateTime = `${meetingDate}T${meetingTime}:00`;
       const timestamp = Date.now();
       const updateData: any = {};
 
@@ -112,7 +120,7 @@ export default function GeneralMeetingUpload({
         const { error } = await supabase
           .from('general_meetings')
           .insert({
-            date: meetingDate,
+            date: fullDateTime,
             type: meetingType,
             location,
             ...updateData,
@@ -124,6 +132,7 @@ export default function GeneralMeetingUpload({
       toast.success(meetingId ? 'Dokumenter opdateret!' : 'Generalforsamling oprettet!');
 
       setMeetingDate('');
+      setMeetingTime('19:00');
       setLocation('');
       setMeetingType('ordinær');
       setBoardProposalFile(null);
@@ -166,18 +175,34 @@ export default function GeneralMeetingUpload({
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Calendar className="w-4 h-4 inline mr-2" />
-            Mødedato
-          </label>
-          <input
-            type="date"
-            value={meetingDate}
-            onChange={(e) => setMeetingDate(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            required
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Calendar className="w-4 h-4 inline mr-2" />
+              Mødedato
+            </label>
+            <input
+              type="date"
+              value={meetingDate}
+              onChange={(e) => setMeetingDate(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Calendar className="w-4 h-4 inline mr-2" />
+              Tidspunkt
+            </label>
+            <input
+              type="time"
+              value={meetingTime}
+              onChange={(e) => setMeetingTime(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              required
+            />
+          </div>
         </div>
 
         <div>
