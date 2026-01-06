@@ -8,10 +8,11 @@ interface MinutesUploadProps {
   meetingId?: string;
   prefillDate?: string;
   prefillLocation?: string;
+  editMode?: boolean;
   onClose?: () => void;
 }
 
-export default function MinutesUpload({ meetingId, prefillDate, prefillLocation, onClose }: MinutesUploadProps = {}) {
+export default function MinutesUpload({ meetingId, prefillDate, prefillLocation, editMode = false, onClose }: MinutesUploadProps = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const [meetingDate, setMeetingDate] = useState(prefillDate || '');
   const [meetingTime, setMeetingTime] = useState('19:00');
@@ -37,7 +38,7 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
       return;
     }
 
-    if (!minutesFile) {
+    if (!editMode && !minutesFile) {
       toast.error('Upload referat');
       return;
     }
@@ -47,32 +48,49 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
     try {
       const fullDateTime = `${meetingDate}T${meetingTime}:00`;
 
-      const timestamp = Date.now();
-      const fileExt = minutesFile.name.split('.').pop();
-      const fileName = `${meetingDate}_${timestamp}.${fileExt}`;
-      const filePath = `${fileName}`;
+      let publicUrl = null;
+      let fileName = null;
+      let fileSize = null;
 
-      const { error: uploadError } = await supabase.storage
-        .from('board_meetings_documents')
-        .upload(filePath, minutesFile, {
-          cacheControl: '3600',
-          upsert: false
-        });
+      if (minutesFile) {
+        const timestamp = Date.now();
+        const fileExt = minutesFile.name.split('.').pop();
+        const fileNamePath = `${meetingDate}_${timestamp}.${fileExt}`;
+        const filePath = `${fileNamePath}`;
 
-      if (uploadError) throw uploadError;
+        const { error: uploadError } = await supabase.storage
+          .from('board_meetings_documents')
+          .upload(filePath, minutesFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('board_meetings_documents')
-        .getPublicUrl(filePath);
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl: url } } = supabase.storage
+          .from('board_meetings_documents')
+          .getPublicUrl(filePath);
+
+        publicUrl = url;
+        fileName = minutesFile.name;
+        fileSize = minutesFile.size;
+      }
 
       if (meetingId) {
+        const updateData: any = {
+          date: fullDateTime,
+          location,
+        };
+
+        if (publicUrl) {
+          updateData.minutes_file_url = publicUrl;
+          updateData.minutes_file_name = fileName;
+          updateData.minutes_file_size = fileSize;
+        }
+
         const { error } = await supabase
           .from('board_meetings')
-          .update({
-            minutes_file_url: publicUrl,
-            minutes_file_name: minutesFile.name,
-            minutes_file_size: minutesFile.size
-          })
+          .update(updateData)
           .eq('id', meetingId);
 
         if (error) throw error;
@@ -83,14 +101,14 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
             date: fullDateTime,
             location,
             minutes_file_url: publicUrl,
-            minutes_file_name: minutesFile.name,
-            minutes_file_size: minutesFile.size
+            minutes_file_name: fileName,
+            minutes_file_size: fileSize
           });
 
         if (error) throw error;
       }
 
-      toast.success('Referat uploadet!');
+      toast.success(editMode ? 'Møde opdateret!' : 'Referat uploadet!');
 
       setMeetingDate('');
       setMeetingTime('19:00');
@@ -111,7 +129,9 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
     <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm p-6">
       <div className="flex items-center gap-3 mb-6">
         <Upload className="w-6 h-6 text-emerald-600" />
-        <h2 className="text-2xl font-bold text-gray-900">Upload Referat</h2>
+        <h2 className="text-2xl font-bold text-gray-900">
+          {editMode ? 'Rediger Møde' : 'Upload Referat'}
+        </h2>
       </div>
 
       <form onSubmit={handleUpload} className="space-y-4">
@@ -161,7 +181,7 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
         </div>
 
         <FileUploadField
-          label="Referat"
+          label={editMode ? 'Referat (valgfrit)' : 'Referat'}
           file={minutesFile}
           onChange={setMinutesFile}
         />
@@ -171,7 +191,7 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
           disabled={isLoading}
           className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         >
-          {isLoading ? 'Uploader...' : 'Upload Referat'}
+          {isLoading ? (editMode ? 'Opdaterer...' : 'Uploader...') : (editMode ? 'Gem ændringer' : 'Upload Referat')}
         </button>
       </form>
     </div>

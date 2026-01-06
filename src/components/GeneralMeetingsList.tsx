@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, MapPin, Upload, Plus } from 'lucide-react';
+import { FileText, MapPin, Upload, Plus, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { generatePDF } from '../utils/pdf';
@@ -32,6 +32,8 @@ export function GeneralMeetingsList() {
   const [loading, setLoading] = useState(true);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<GeneralMeeting | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const { selectedYear } = useYear();
   const { user } = useAuth();
 
@@ -138,18 +140,37 @@ export function GeneralMeetingsList() {
 
   const nextMeeting = getNextMeeting();
 
-  const handleOpenUploadModal = (meeting?: GeneralMeeting) => {
+  const handleOpenUploadModal = (meeting?: GeneralMeeting, isEdit = false) => {
     if (meeting) {
       setSelectedMeeting(meeting);
     } else {
       setSelectedMeeting(null);
     }
+    setEditMode(isEdit);
     setUploadModalOpen(true);
   };
 
   const handleCloseUploadModal = () => {
     setUploadModalOpen(false);
     setSelectedMeeting(null);
+    setEditMode(false);
+  };
+
+  const handleDeleteMeeting = async (meetingId: string) => {
+    try {
+      const { error } = await supabase
+        .from('general_meetings')
+        .delete()
+        .eq('id', meetingId);
+
+      if (error) throw error;
+
+      toast.success('Generalforsamling slettet');
+      setDeleteConfirmId(null);
+    } catch (error) {
+      console.error('Error deleting meeting:', error);
+      toast.error('Kunne ikke slette generalforsamling');
+    }
   };
 
   return (
@@ -241,6 +262,45 @@ export function GeneralMeetingsList() {
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
+                      {user && (
+                        <>
+                          <motion.button
+                            onClick={() => handleOpenUploadModal(meeting, true)}
+                            className="flex items-center gap-1 text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            title="Rediger møde"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </motion.button>
+                          {deleteConfirmId === meeting.id ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleDeleteMeeting(meeting.id)}
+                                className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
+                              >
+                                Bekræft
+                              </button>
+                              <button
+                                onClick={() => setDeleteConfirmId(null)}
+                                className="text-xs bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600"
+                              >
+                                Annuller
+                              </button>
+                            </div>
+                          ) : (
+                            <motion.button
+                              onClick={() => setDeleteConfirmId(meeting.id)}
+                              className="flex items-center gap-1 text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              title="Slet møde"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </motion.button>
+                          )}
+                        </>
+                      )}
                       {user && isPastDate(meeting.date) && !meeting.minutes_text && !meeting.board_proposal_text && !meeting.board_report_text && !meeting.minutes_file_url && !meeting.board_proposal_file_url && !meeting.board_report_file_url && (
                         <motion.button
                           onClick={() => handleOpenUploadModal(meeting)}
@@ -308,9 +368,10 @@ export function GeneralMeetingsList() {
         isOpen={uploadModalOpen}
         onClose={handleCloseUploadModal}
         meetingId={selectedMeeting?.id}
-        meetingDate={selectedMeeting?.date.split('T')[0]}
+        meetingDate={selectedMeeting?.date}
         meetingLocation={selectedMeeting?.location}
         meetingType={selectedMeeting?.type}
+        editMode={editMode}
       />
     </div>
   );

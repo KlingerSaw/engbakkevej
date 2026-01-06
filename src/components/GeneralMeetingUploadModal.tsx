@@ -8,6 +8,7 @@ interface GeneralMeetingUploadModalProps {
   meetingDate?: string;
   meetingLocation?: string;
   meetingType?: 'ordinær' | 'ekstraordinær';
+  editMode?: boolean;
 }
 
 export default function GeneralMeetingUploadModal({
@@ -17,6 +18,7 @@ export default function GeneralMeetingUploadModal({
   meetingDate,
   meetingLocation,
   meetingType,
+  editMode = false,
 }: GeneralMeetingUploadModalProps) {
   if (!isOpen) return null;
 
@@ -36,6 +38,7 @@ export default function GeneralMeetingUploadModal({
             prefillDate={meetingDate}
             prefillLocation={meetingLocation}
             prefillType={meetingType}
+            editMode={editMode}
             onClose={onClose}
           />
         </div>

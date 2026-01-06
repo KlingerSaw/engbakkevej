@@ -7,6 +7,7 @@ interface MeetingUploadModalProps {
   meetingId?: string;
   meetingDate?: string;
   meetingLocation?: string;
+  editMode?: boolean;
 }
 
 export default function MeetingUploadModal({
@@ -15,6 +16,7 @@ export default function MeetingUploadModal({
   meetingId,
   meetingDate,
   meetingLocation,
+  editMode = false,
 }: MeetingUploadModalProps) {
   if (!isOpen) return null;
 
@@ -33,6 +35,7 @@ export default function MeetingUploadModal({
             meetingId={meetingId}
             prefillDate={meetingDate}
             prefillLocation={meetingLocation}
+            editMode={editMode}
             onClose={onClose}
           />
         </div>

@@ -9,6 +9,7 @@ interface GeneralMeetingUploadProps {
   prefillDate?: string;
   prefillLocation?: string;
   prefillType?: 'ordinær' | 'ekstraordinær';
+  editMode?: boolean;
   onClose?: () => void;
 }
 
@@ -17,6 +18,7 @@ export default function GeneralMeetingUpload({
   prefillDate,
   prefillLocation,
   prefillType,
+  editMode = false,
   onClose
 }: GeneralMeetingUploadProps = {}) {
   const [isLoading, setIsLoading] = useState(false);
@@ -110,9 +112,16 @@ export default function GeneralMeetingUpload({
       }
 
       if (meetingId) {
+        const finalUpdateData = {
+          date: fullDateTime,
+          type: meetingType,
+          location,
+          ...updateData,
+        };
+
         const { error } = await supabase
           .from('general_meetings')
-          .update(updateData)
+          .update(finalUpdateData)
           .eq('id', meetingId);
 
         if (error) throw error;
@@ -129,7 +138,7 @@ export default function GeneralMeetingUpload({
         if (error) throw error;
       }
 
-      toast.success(meetingId ? 'Dokumenter opdateret!' : 'Generalforsamling oprettet!');
+      toast.success(editMode ? 'Generalforsamling opdateret!' : (meetingId ? 'Dokumenter opdateret!' : 'Generalforsamling oprettet!'));
 
       setMeetingDate('');
       setMeetingTime('19:00');
@@ -154,7 +163,7 @@ export default function GeneralMeetingUpload({
       <div className="flex items-center gap-3 mb-6">
         <Upload className="w-6 h-6 text-emerald-600" />
         <h2 className="text-2xl font-bold text-gray-900">
-          {meetingId ? 'Upload Referat' : 'Opret Generalforsamling'}
+          {editMode ? 'Rediger Generalforsamling' : (meetingId ? 'Upload Referat' : 'Opret Generalforsamling')}
         </h2>
       </div>
 
@@ -250,7 +259,7 @@ export default function GeneralMeetingUpload({
           disabled={isLoading}
           className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         >
-          {isLoading ? 'Uploader...' : meetingId ? 'Upload Referat' : 'Opret Generalforsamling'}
+          {isLoading ? (editMode ? 'Opdaterer...' : 'Uploader...') : (editMode ? 'Gem ændringer' : (meetingId ? 'Upload Referat' : 'Opret Generalforsamling'))}
         </button>
       </form>
     </div>
