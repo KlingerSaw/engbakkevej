@@ -21,11 +21,11 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
 
   useEffect(() => {
     if (prefillDate) {
-      const dateObj = new Date(prefillDate);
-      const dateStr = dateObj.toISOString().split('T')[0];
-      const timeStr = dateObj.toTimeString().slice(0, 5);
+      const [dateStr, timeStr] = prefillDate.split('T');
       setMeetingDate(dateStr);
-      setMeetingTime(timeStr);
+      if (timeStr) {
+        setMeetingTime(timeStr.slice(0, 5));
+      }
     }
     if (prefillLocation) setLocation(prefillLocation);
   }, [prefillDate, prefillLocation]);
