@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Upload, Lock, Calendar, MapPin } from 'lucide-react';
+import { Upload, Calendar, MapPin } from 'lucide-react';
 import DocumentUploadField from './DocumentUploadField';
+import { supabase } from '../lib/supabase';
 
 interface MinutesUploadProps {
   meetingId?: string;
@@ -11,13 +12,7 @@ interface MinutesUploadProps {
 }
 
 export default function MinutesUpload({ meetingId, prefillDate, prefillLocation, onClose }: MinutesUploadProps = {}) {
-  const CHAIRMAN_EMAIL = 'rene@lind.pm';
-  const [step, setStep] = useState<'verify' | 'upload'>('verify');
-  const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [codeSent, setCodeSent] = useState(false);
-
-  // Form data
   const [meetingDate, setMeetingDate] = useState(prefillDate || '');
   const [location, setLocation] = useState(prefillLocation || '');
   const [minutesHtml, setMinutesHtml] = useState('');
@@ -27,44 +22,7 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
     if (prefillLocation) setLocation(prefillLocation);
   }, [prefillDate, prefillLocation]);
 
-  useEffect(() => {
-    const sendCode = async () => {
-      if (codeSent) return;
-
-      setIsLoading(true);
-
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-verification`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email: CHAIRMAN_EMAIL }),
-          }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Kunne ikke sende verifikationskode');
-        }
-
-        toast.success('Verifikationskode sendt til formandens email!');
-        setCodeSent(true);
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Der opstod en fejl');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    sendCode();
-  }, []);
-
-  const handleVerifyAndUpload = async (e: React.FormEvent) => {
+  const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!meetingDate || !location) {
@@ -80,42 +38,30 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
     setIsLoading(true);
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-and-upload`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: CHAIRMAN_EMAIL,
-            code,
-            meetingId,
-            meetingData: {
-              date: meetingDate,
-              location,
-              minutes_text: minutesHtml,
-            },
-          }),
-        }
-      );
+      if (meetingId) {
+        const { error } = await supabase
+          .from('board_meetings')
+          .update({ minutes_text: minutesHtml })
+          .eq('id', meetingId);
 
-      const data = await response.json();
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('board_meetings')
+          .insert({
+            date: meetingDate,
+            location,
+            minutes_text: minutesHtml,
+          });
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Kunne ikke uploade referat');
+        if (error) throw error;
       }
 
       toast.success('Referat uploadet!');
 
-      // Reset form
-      setStep('verify');
-      setCode('');
       setMeetingDate('');
       setLocation('');
       setMinutesHtml('');
-      setCodeSent(false);
 
       if (onClose) {
         onClose();
@@ -134,74 +80,50 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
         <h2 className="text-2xl font-bold text-gray-900">Upload Referat</h2>
       </div>
 
-      {step === 'verify' && (
-        <form onSubmit={handleVerifyAndUpload} className="space-y-4">
-          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">
-            <p className="text-sm text-emerald-800">
-              <Lock className="w-4 h-4 inline mr-2" />
-              En 6-cifret kode er blevet sendt til din email. Koden er gyldig i 15 minutter.
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Verifikationskode
-            </label>
-            <input
-              type="text"
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="123456"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-center text-2xl tracking-widest"
-              required
-              maxLength={6}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Calendar className="w-4 h-4 inline mr-2" />
-              Mødedato
-            </label>
-            <input
-              type="date"
-              value={meetingDate}
-              onChange={(e) => setMeetingDate(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <MapPin className="w-4 h-4 inline mr-2" />
-              Sted
-            </label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Sune"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              required
-            />
-          </div>
-
-          <DocumentUploadField
-            label="Referat"
-            value={minutesHtml}
-            onChange={setMinutesHtml}
+      <form onSubmit={handleUpload} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <Calendar className="w-4 h-4 inline mr-2" />
+            Mødedato
+          </label>
+          <input
+            type="date"
+            value={meetingDate}
+            onChange={(e) => setMeetingDate(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            required
           />
+        </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-          >
-            {isLoading ? 'Uploader...' : 'Upload Referat'}
-          </button>
-        </form>
-      )}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <MapPin className="w-4 h-4 inline mr-2" />
+            Sted
+          </label>
+          <input
+            type="text"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="Sune"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            required
+          />
+        </div>
+
+        <DocumentUploadField
+          label="Referat"
+          value={minutesHtml}
+          onChange={setMinutesHtml}
+        />
+
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+        >
+          {isLoading ? 'Uploader...' : 'Upload Referat'}
+        </button>
+      </form>
     </div>
   );
 }

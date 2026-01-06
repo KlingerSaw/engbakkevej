@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { generatePDF } from '../utils/pdf';
 import GeneralMeetingUploadModal from './GeneralMeetingUploadModal';
 import { useYear } from '../contexts/YearContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface GeneralMeeting {
   id: string;
@@ -23,6 +24,7 @@ export function GeneralMeetingsList() {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<GeneralMeeting | null>(null);
   const { selectedYear } = useYear();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchMeetings();
@@ -132,15 +134,17 @@ export function GeneralMeetingsList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-3 items-center">
-        <button
-          onClick={() => handleOpenUploadModal()}
-          className="flex-1 bg-brand-blue text-white py-3 px-4 rounded-lg hover:bg-brand-blue-dark transition flex items-center justify-center gap-2 font-medium"
-        >
-          <Plus className="w-5 h-5" />
-          Opret ny generalforsamling
-        </button>
-      </div>
+      {user && (
+        <div className="flex gap-3 items-center">
+          <button
+            onClick={() => handleOpenUploadModal()}
+            className="flex-1 bg-brand-blue text-white py-3 px-4 rounded-lg hover:bg-brand-blue-dark transition flex items-center justify-center gap-2 font-medium"
+          >
+            <Plus className="w-5 h-5" />
+            Opret ny generalforsamling
+          </button>
+        </div>
+      )}
 
       {filteredMeetings.length === 0 ? (
         <p className="text-center">Ingen generalforsamlinger i {selectedYear}.</p>
@@ -217,7 +221,7 @@ export function GeneralMeetingsList() {
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      {isPastDate(meeting.date) && !meeting.minutes_text && !meeting.board_proposal_text && !meeting.board_report_text && (
+                      {user && isPastDate(meeting.date) && !meeting.minutes_text && !meeting.board_proposal_text && !meeting.board_report_text && (
                         <motion.button
                           onClick={() => handleOpenUploadModal(meeting)}
                           className="flex items-center gap-1 text-sm bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600 transition-colors"
