@@ -16,6 +16,15 @@ interface GeneralMeeting {
   board_proposal_text: string | null;
   board_report_text: string | null;
   minutes_text: string | null;
+  board_proposal_file_url: string | null;
+  board_proposal_file_name: string | null;
+  board_proposal_file_size: number | null;
+  board_report_file_url: string | null;
+  board_report_file_name: string | null;
+  board_report_file_size: number | null;
+  minutes_file_url: string | null;
+  minutes_file_name: string | null;
+  minutes_file_size: number | null;
 }
 
 export function GeneralMeetingsList() {
@@ -65,6 +74,17 @@ export function GeneralMeetingsList() {
     content: string | null,
     type: 'proposal' | 'report' | 'minutes'
   ) => {
+    const fileUrls = {
+      proposal: meeting.board_proposal_file_url,
+      report: meeting.board_report_file_url,
+      minutes: meeting.minutes_file_url
+    };
+
+    if (fileUrls[type]) {
+      window.open(fileUrls[type]!, '_blank');
+      return;
+    }
+
     if (!content) return;
 
     const date = new Date(meeting.date).toLocaleDateString('da-DK', {
@@ -221,7 +241,7 @@ export function GeneralMeetingsList() {
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      {user && isPastDate(meeting.date) && !meeting.minutes_text && !meeting.board_proposal_text && !meeting.board_report_text && (
+                      {user && isPastDate(meeting.date) && !meeting.minutes_text && !meeting.board_proposal_text && !meeting.board_report_text && !meeting.minutes_file_url && !meeting.board_proposal_file_url && !meeting.board_report_file_url && (
                         <motion.button
                           onClick={() => handleOpenUploadModal(meeting)}
                           className="flex items-center gap-1 text-sm bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600 transition-colors"
@@ -237,43 +257,43 @@ export function GeneralMeetingsList() {
                           <motion.button
                             onClick={() => handleDownloadDocument(meeting, meeting.board_proposal_text, 'proposal')}
                             className={`flex items-center gap-1 text-sm px-3 py-1 rounded transition-colors ${
-                              meeting.board_proposal_text
+                              meeting.board_proposal_text || meeting.board_proposal_file_url
                                 ? 'text-brand-blue hover:text-white group-hover:text-white'
                                 : 'text-gray-400 italic cursor-default'
                             }`}
-                            whileHover={meeting.board_proposal_text ? { scale: 1.05 } : {}}
-                            whileTap={meeting.board_proposal_text ? { scale: 0.95 } : {}}
+                            whileHover={meeting.board_proposal_text || meeting.board_proposal_file_url ? { scale: 1.05 } : {}}
+                            whileTap={meeting.board_proposal_text || meeting.board_proposal_file_url ? { scale: 0.95 } : {}}
                           >
                             <FileText className="w-4 h-4" />
-                            <span>{meeting.board_proposal_text ? 'Forslag til bestyrelse' : 'Ingen rettidig indkommet'}</span>
+                            <span>{meeting.board_proposal_text || meeting.board_proposal_file_url ? 'Forslag til bestyrelse' : 'Ingen rettidig indkommet'}</span>
                           </motion.button>
                           <motion.button
                             onClick={() => handleDownloadDocument(meeting, meeting.board_report_text, 'report')}
                             className={`flex items-center gap-1 text-sm px-3 py-1 rounded transition-colors ${
-                              meeting.board_report_text
+                              meeting.board_report_text || meeting.board_report_file_url
                                 ? 'text-brand-blue hover:text-white group-hover:text-white'
                                 : 'text-gray-400 italic cursor-default'
                             }`}
-                            whileHover={meeting.board_report_text ? { scale: 1.05 } : {}}
-                            whileTap={meeting.board_report_text ? { scale: 0.95 } : {}}
+                            whileHover={meeting.board_report_text || meeting.board_report_file_url ? { scale: 1.05 } : {}}
+                            whileTap={meeting.board_report_text || meeting.board_report_file_url ? { scale: 0.95 } : {}}
                           >
                             <FileText className="w-4 h-4" />
-                            <span>{meeting.board_report_text ? 'Bestyrelsens beretning' : 'Ingen rettidig indkommet'}</span>
+                            <span>{meeting.board_report_text || meeting.board_report_file_url ? 'Bestyrelsens beretning' : 'Ingen rettidig indkommet'}</span>
                           </motion.button>
                         </>
                       )}
                       <motion.button
                         onClick={() => handleDownloadDocument(meeting, meeting.minutes_text, 'minutes')}
                         className={`flex items-center gap-1 text-sm px-3 py-1 rounded transition-colors ${
-                          meeting.minutes_text
+                          meeting.minutes_text || meeting.minutes_file_url
                             ? 'text-brand-blue hover:text-white group-hover:text-white'
                             : 'text-gray-400 italic cursor-default'
                         }`}
-                        whileHover={meeting.minutes_text ? { scale: 1.05 } : {}}
-                        whileTap={meeting.minutes_text ? { scale: 0.95 } : {}}
+                        whileHover={meeting.minutes_text || meeting.minutes_file_url ? { scale: 1.05 } : {}}
+                        whileTap={meeting.minutes_text || meeting.minutes_file_url ? { scale: 0.95 } : {}}
                       >
                         <FileText className="w-4 h-4" />
-                        <span>{meeting.minutes_text ? 'Referat' : 'Ikke tilgængeligt'}</span>
+                        <span>{meeting.minutes_text || meeting.minutes_file_url ? 'Referat' : 'Ikke tilgængeligt'}</span>
                       </motion.button>
                     </div>
                   </div>

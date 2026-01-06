@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Upload, Calendar, MapPin } from 'lucide-react';
-import DocumentUploadField from './DocumentUploadField';
+import FileUploadField from './FileUploadField';
 import { supabase } from '../lib/supabase';
 
 interface MinutesUploadProps {
@@ -15,7 +15,7 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
   const [isLoading, setIsLoading] = useState(false);
   const [meetingDate, setMeetingDate] = useState(prefillDate || '');
   const [location, setLocation] = useState(prefillLocation || '');
-  const [minutesHtml, setMinutesHtml] = useState('');
+  const [minutesFile, setMinutesFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (prefillDate) setMeetingDate(prefillDate);
@@ -30,7 +30,7 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
       return;
     }
 
-    if (!minutesHtml) {
+    if (!minutesFile) {
       toast.error('Upload referat');
       return;
     }
@@ -38,10 +38,32 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
     setIsLoading(true);
 
     try {
+      const timestamp = Date.now();
+      const fileExt = minutesFile.name.split('.').pop();
+      const fileName = `${meetingDate}_${timestamp}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('board_meetings_documents')
+        .upload(filePath, minutesFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('board_meetings_documents')
+        .getPublicUrl(filePath);
+
       if (meetingId) {
         const { error } = await supabase
           .from('board_meetings')
-          .update({ minutes_text: minutesHtml })
+          .update({
+            minutes_file_url: publicUrl,
+            minutes_file_name: minutesFile.name,
+            minutes_file_size: minutesFile.size
+          })
           .eq('id', meetingId);
 
         if (error) throw error;
@@ -51,7 +73,9 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
           .insert({
             date: meetingDate,
             location,
-            minutes_text: minutesHtml,
+            minutes_file_url: publicUrl,
+            minutes_file_name: minutesFile.name,
+            minutes_file_size: minutesFile.size
           });
 
         if (error) throw error;
@@ -61,7 +85,7 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
 
       setMeetingDate('');
       setLocation('');
-      setMinutesHtml('');
+      setMinutesFile(null);
 
       if (onClose) {
         onClose();
@@ -110,10 +134,10 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
           />
         </div>
 
-        <DocumentUploadField
+        <FileUploadField
           label="Referat"
-          value={minutesHtml}
-          onChange={setMinutesHtml}
+          file={minutesFile}
+          onChange={setMinutesFile}
         />
 
         <button

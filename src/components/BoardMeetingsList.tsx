@@ -13,6 +13,9 @@ interface BoardMeeting {
   date: string;
   location: string;
   minutes_text: string | null;
+  minutes_file_url: string | null;
+  minutes_file_name: string | null;
+  minutes_file_size: number | null;
 }
 
 export function BoardMeetingsList() {
@@ -58,6 +61,11 @@ export function BoardMeetingsList() {
   }
 
   const handleDownloadMinutes = async (meeting: BoardMeeting) => {
+    if (meeting.minutes_file_url) {
+      window.open(meeting.minutes_file_url, '_blank');
+      return;
+    }
+
     if (!meeting.minutes_text) return;
 
     const date = new Date(meeting.date).toLocaleDateString('da-DK', {
@@ -198,7 +206,7 @@ export function BoardMeetingsList() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      {user && isPastDate(meeting.date) && !meeting.minutes_text && (
+                      {user && isPastDate(meeting.date) && !meeting.minutes_text && !meeting.minutes_file_url && (
                         <motion.button
                           onClick={() => handleOpenUploadModal(meeting)}
                           className="flex items-center gap-1 text-sm bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600 transition-colors"
@@ -209,7 +217,7 @@ export function BoardMeetingsList() {
                           <span>Upload referat</span>
                         </motion.button>
                       )}
-                      {meeting.minutes_text && (
+                      {(meeting.minutes_text || meeting.minutes_file_url) && (
                         <motion.button
                           onClick={() => handleDownloadMinutes(meeting)}
                           className="flex items-center gap-1 text-sm text-brand-blue hover:text-white transition-colors group-hover:text-white"

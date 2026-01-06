@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Upload, Calendar, MapPin, FileText } from 'lucide-react';
-import DocumentUploadField from './DocumentUploadField';
+import FileUploadField from './FileUploadField';
 
 interface GeneralMeetingUploadProps {
   meetingId?: string;
@@ -23,9 +23,9 @@ export default function GeneralMeetingUpload({
   const [meetingDate, setMeetingDate] = useState(prefillDate || '');
   const [location, setLocation] = useState(prefillLocation || '');
   const [meetingType, setMeetingType] = useState<'ordinær' | 'ekstraordinær'>(prefillType || 'ordinær');
-  const [boardProposalHtml, setBoardProposalHtml] = useState('');
-  const [boardReportHtml, setBoardReportHtml] = useState('');
-  const [minutesHtml, setMinutesHtml] = useState('');
+  const [boardProposalFile, setBoardProposalFile] = useState<File | null>(null);
+  const [boardReportFile, setBoardReportFile] = useState<File | null>(null);
+  const [minutesFile, setMinutesFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (prefillDate) setMeetingDate(prefillDate);
@@ -44,11 +44,62 @@ export default function GeneralMeetingUpload({
     setIsLoading(true);
 
     try {
-      const updateData: any = {
-        board_proposal_text: boardProposalHtml || null,
-        board_report_text: boardReportHtml || null,
-        minutes_text: minutesHtml || null,
-      };
+      const timestamp = Date.now();
+      const updateData: any = {};
+
+      if (boardProposalFile) {
+        const fileExt = boardProposalFile.name.split('.').pop();
+        const fileName = `${meetingDate}_proposal_${timestamp}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('general_meetings_documents')
+          .upload(fileName, boardProposalFile, { cacheControl: '3600', upsert: false });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('general_meetings_documents')
+          .getPublicUrl(fileName);
+
+        updateData.board_proposal_file_url = publicUrl;
+        updateData.board_proposal_file_name = boardProposalFile.name;
+        updateData.board_proposal_file_size = boardProposalFile.size;
+      }
+
+      if (boardReportFile) {
+        const fileExt = boardReportFile.name.split('.').pop();
+        const fileName = `${meetingDate}_report_${timestamp}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('general_meetings_documents')
+          .upload(fileName, boardReportFile, { cacheControl: '3600', upsert: false });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('general_meetings_documents')
+          .getPublicUrl(fileName);
+
+        updateData.board_report_file_url = publicUrl;
+        updateData.board_report_file_name = boardReportFile.name;
+        updateData.board_report_file_size = boardReportFile.size;
+      }
+
+      if (minutesFile) {
+        const fileExt = minutesFile.name.split('.').pop();
+        const fileName = `${meetingDate}_minutes_${timestamp}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('general_meetings_documents')
+          .upload(fileName, minutesFile, { cacheControl: '3600', upsert: false });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('general_meetings_documents')
+          .getPublicUrl(fileName);
+
+        updateData.minutes_file_url = publicUrl;
+        updateData.minutes_file_name = minutesFile.name;
+        updateData.minutes_file_size = minutesFile.size;
+      }
 
       if (meetingId) {
         const { error } = await supabase
@@ -75,9 +126,9 @@ export default function GeneralMeetingUpload({
       setMeetingDate('');
       setLocation('');
       setMeetingType('ordinær');
-      setBoardProposalHtml('');
-      setBoardReportHtml('');
-      setMinutesHtml('');
+      setBoardProposalFile(null);
+      setBoardReportFile(null);
+      setMinutesFile(null);
 
       if (onClose) {
         onClose();
@@ -146,26 +197,26 @@ export default function GeneralMeetingUpload({
 
         {meetingType === 'ordinær' && (
           <>
-            <DocumentUploadField
+            <FileUploadField
               label="Forslag til bestyrelse"
-              value={boardProposalHtml}
-              onChange={setBoardProposalHtml}
+              file={boardProposalFile}
+              onChange={setBoardProposalFile}
               optional
             />
 
-            <DocumentUploadField
+            <FileUploadField
               label="Bestyrelsens beretning"
-              value={boardReportHtml}
-              onChange={setBoardReportHtml}
+              file={boardReportFile}
+              onChange={setBoardReportFile}
               optional
             />
           </>
         )}
 
-        <DocumentUploadField
+        <FileUploadField
           label="Referat"
-          value={minutesHtml}
-          onChange={setMinutesHtml}
+          file={minutesFile}
+          onChange={setMinutesFile}
           optional
         />
 
