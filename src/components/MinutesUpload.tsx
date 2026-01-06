@@ -28,41 +28,41 @@ export default function MinutesUpload({ meetingId, prefillDate, prefillLocation,
   }, [prefillDate, prefillLocation]);
 
   useEffect(() => {
-    if (!codeSent) {
-      handleSendCode();
-    }
-  }, [codeSent]);
+    const sendCode = async () => {
+      if (codeSent) return;
 
-  const handleSendCode = async () => {
-    setIsLoading(true);
+      setIsLoading(true);
 
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-verification`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email: CHAIRMAN_EMAIL }),
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-verification`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: CHAIRMAN_EMAIL }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Kunne ikke sende verifikationskode');
         }
-      );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Kunne ikke sende verifikationskode');
+        toast.success('Verifikationskode sendt til formandens email!');
+        setCodeSent(true);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Der opstod en fejl');
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      toast.success('Verifikationskode sendt til formandens email!');
-      setCodeSent(true);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Der opstod en fejl');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    sendCode();
+  }, []);
 
   const handleVerifyAndUpload = async (e: React.FormEvent) => {
     e.preventDefault();
