@@ -59,22 +59,6 @@ export function CommentsList({ ideaId, refreshTrigger }: CommentsListProps) {
 
   useEffect(() => {
     fetchComments();
-
-    const channel = supabase
-      .channel('idea_comments_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'idea_comments',
-        filter: `idea_id=eq.${ideaId}`
-      }, () => {
-        fetchComments();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [ideaId, refreshTrigger]);
 
   const fetchComments = async () => {

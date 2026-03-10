@@ -31,17 +31,6 @@ export function BoardMeetingsList() {
 
   useEffect(() => {
     fetchMeetings();
-
-    const channel = supabase
-      .channel('board_meetings_channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'board_meetings' }, () => {
-        fetchMeetings();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   async function fetchMeetings() {

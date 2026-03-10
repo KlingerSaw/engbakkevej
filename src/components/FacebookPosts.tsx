@@ -45,18 +45,6 @@ export function FacebookPosts() {
 
   useEffect(() => {
     fetchPosts();
-
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel('facebook_posts_channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'facebook_posts' }, () => {
-        fetchPosts();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   async function fetchPosts() {

@@ -29,23 +29,6 @@ export function IdeaCard({ idea, deviceId, onUpvote, onEdit, onDelete }: IdeaCar
   useEffect(() => {
     fetchUpvotes();
     checkIfUpvoted();
-
-    const channel = supabase
-      .channel('idea_upvotes_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'idea_upvotes',
-        filter: `idea_id=eq.${idea.id}`
-      }, () => {
-        fetchUpvotes();
-        checkIfUpvoted();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [idea.id]);
 
   const fetchUpvotes = async () => {

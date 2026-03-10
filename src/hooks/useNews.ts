@@ -9,17 +9,6 @@ export function useNews(year: number) {
 
   useEffect(() => {
     fetchNews();
-
-    const channel = supabase
-      .channel('news_channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'news' }, () => {
-        fetchNews();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [year]);
 
   const fetchNews = async () => {

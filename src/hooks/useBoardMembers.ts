@@ -28,17 +28,6 @@ export function useBoardMembers(year?: number) {
 
   useEffect(() => {
     fetchMembers();
-
-    const channel = supabase
-      .channel('board_members_channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'board_members' }, () => {
-        fetchMembers();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [year]);
 
   const fetchMembers = async () => {

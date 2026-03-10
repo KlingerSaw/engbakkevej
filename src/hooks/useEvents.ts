@@ -9,17 +9,6 @@ export function useEvents(year?: number) {
 
   useEffect(() => {
     fetchEvents();
-
-    const channel = supabase
-      .channel('events_channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => {
-        fetchEvents();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [year]);
 
   const fetchEvents = async () => {

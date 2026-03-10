@@ -61,26 +61,6 @@ export function EventRegistrations({ eventName, eventDate, eventId }: EventRegis
 
   useEffect(() => {
     fetchRegistrations();
-
-    const channel = supabase
-      .channel('event_registrations_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'event_registrations',
-          filter: `event_id=eq.${eventId}`
-        },
-        () => {
-          fetchRegistrations();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [eventId]);
 
   const handleDelete = async (registration: Registration) => {

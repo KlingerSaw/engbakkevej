@@ -40,17 +40,6 @@ export function GeneralMeetingsList() {
 
   useEffect(() => {
     fetchMeetings();
-
-    const channel = supabase
-      .channel('general_meetings_channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'general_meetings' }, () => {
-        fetchMeetings();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   async function fetchMeetings() {

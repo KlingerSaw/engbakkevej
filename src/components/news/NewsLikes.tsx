@@ -18,24 +18,6 @@ export function NewsLikes({ newsId }: NewsLikesProps) {
   useEffect(() => {
     fetchLikes();
     checkIfLiked();
-
-    // Subscribe to real-time changes
-    const channel = supabase
-      .channel(`news_likes_${newsId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'news_likes',
-        filter: `news_id=eq.${newsId}`
-      }, () => {
-        fetchLikes();
-        checkIfLiked();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [newsId]);
 
   const fetchLikes = async () => {

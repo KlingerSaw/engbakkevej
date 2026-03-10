@@ -23,28 +23,6 @@ export function IdeasList() {
 
   useEffect(() => {
     fetchIdeas();
-
-    // Subscribe to real-time changes
-    const channel = supabase
-      .channel('ideas_realtime')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'ideas' 
-        }, 
-        (payload) => {
-          console.log('Received real-time update:', payload);
-          fetchIdeas(); // Refresh the list when changes occur
-        }
-      )
-      .subscribe((status) => {
-        console.log('Subscription status:', status);
-      });
-
-    return () => {
-      channel.unsubscribe();
-    };
   }, []);
 
   async function fetchIdeas() {
