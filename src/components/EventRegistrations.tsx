@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, ChevronDown, ChevronUp, Edit2, Trash2 } from 'lucide-react';
+import { Users, ChevronDown, ChevronUp, CreditCard as Edit2, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { EventRegistration } from './EventRegistration';
 import toast from 'react-hot-toast';

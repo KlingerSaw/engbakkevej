@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ThumbsUp, Home, Edit2, FileText, Trash2, ExternalLink, MessageCircle } from 'lucide-react';
+import { ThumbsUp, Home, CreditCard as Edit2, FileText, Trash2, ExternalLink, MessageCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import { Idea } from '../../types/ideas';

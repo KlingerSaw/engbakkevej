@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Home, Edit2, Trash2 } from 'lucide-react';
+import { Home, CreditCard as Edit2, Trash2 } from 'lucide-react';
 import { HouseVerification } from '../shared/HouseVerification';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';

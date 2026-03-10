@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, MapPin, Upload, Plus, Edit, Trash2 } from 'lucide-react';
+import { FileText, MapPin, Upload, Plus, CreditCard as Edit, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { generatePDF } from '../utils/pdf';

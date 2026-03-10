@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, MapPin, AlertTriangle, Upload, Plus, Edit, Trash2 } from 'lucide-react';
+import { FileText, MapPin, AlertTriangle, Upload, Plus, CreditCard as Edit, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { generatePDF } from '../utils/pdf';
