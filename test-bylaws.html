@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Vedtægter</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Test af vedtægter</h1>
+  <div id="status">Henter...</div>
+  <div id="result"></div>
+
+  <script type="module">
+    const SUPABASE_URL = 'https://pttjtcejudcytuzoevab.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0dGp0Y2VqdWRjeXR1em9ldmFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMzNTEyNjgsImV4cCI6MjA1ODkyNzI2OH0.9AFVtvunt_XdkRUcHc7trmpg7kF-XXN2iqnGGNIjmo4';
+
+    const { createClient } = supabase;
+    const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    console.log('Client created:', client);
+
+    async function test() {
+      try {
+        const { data, error } = await client
+          .from('bylaws')
+          .select('*')
+          .order('section_number');
+
+        console.log('Response:', { data, error });
+
+        const statusEl = document.getElementById('status');
+        const resultEl = document.getElementById('result');
+
+        if (error) {
+          statusEl.textContent = 'FEJL: ' + error.message;
+          statusEl.style.color = 'red';
+          console.error('Error:', error);
+        } else {
+          statusEl.textContent = `SUCCESS: ${data.length} vedtægter hentet`;
+          statusEl.style.color = 'green';
+          resultEl.innerHTML = data.map(b => `
+            <div style="border: 1px solid #ccc; margin: 10px; padding: 10px;">
+              <h3>${b.section_number}. ${b.title}</h3>
+              <div>${b.content}</div>
+            </div>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Exception:', err);
+        document.getElementById('status').textContent = 'EXCEPTION: ' + err.message;
+        document.getElementById('status').style.color = 'red';
+      }
+    }
+
+    test();
+  </script>
+</body>
+</html>
