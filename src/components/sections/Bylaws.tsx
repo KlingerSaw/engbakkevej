@@ -25,8 +25,23 @@ export function BylawsSection({ hoveredSection, setHoveredSection }: BylawsSecti
 
   useEffect(() => {
     console.log('Bylaws component mounted, fetching...');
+
+    testSimpleQuery();
     fetchBylaws();
   }, []);
+
+  async function testSimpleQuery() {
+    console.log('=== TESTING SIMPLE QUERY ===');
+    try {
+      const { data, error } = await supabase
+        .from('news')
+        .select('id, title')
+        .limit(1);
+      console.log('News test result:', { data, error });
+    } catch (err) {
+      console.error('News test error:', err);
+    }
+  }
 
   async function fetchBylaws() {
     console.log('=== START FETCHING BYLAWS ===');
@@ -34,15 +49,23 @@ export function BylawsSection({ hoveredSection, setHoveredSection }: BylawsSecti
 
     try {
       console.log('Supabase client exists:', !!supabase);
-      console.log('Starting query...');
+      console.log('Supabase URL:', supabase.supabaseUrl);
 
-      const query = supabase
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Query timeout after 10s')), 10000)
+      );
+
+      const queryPromise = supabase
         .from('bylaws')
         .select('*')
         .order('section_number');
 
-      console.log('Query created, awaiting response...');
-      const { data, error } = await query;
+      console.log('Query created, awaiting response with 10s timeout...');
+
+      const { data, error } = await Promise.race([
+        queryPromise,
+        timeoutPromise
+      ]) as any;
 
       console.log('=== RESPONSE RECEIVED ===');
       console.log('Data:', data);
@@ -59,7 +82,11 @@ export function BylawsSection({ hoveredSection, setHoveredSection }: BylawsSecti
       }
     } catch (error) {
       console.error('Exception caught:', error);
-      toast.error('Kunne ikke hente vedtægter');
+      if (error instanceof Error) {
+        toast.error(`Fejl: ${error.message}`);
+      } else {
+        toast.error('Kunne ikke hente vedtægter');
+      }
       setBylaws([]);
     } finally {
       console.log('=== SETTING LOADING TO FALSE ===');
