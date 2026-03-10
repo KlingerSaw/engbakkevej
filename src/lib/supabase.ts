@@ -22,9 +22,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   db: {
     schema: 'public',
   },
-  realtime: {
-    transport: undefined as any,
-  }
 });
 
 export async function fetchMinutesFiles() {

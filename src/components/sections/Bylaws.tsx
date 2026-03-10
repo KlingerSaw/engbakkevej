@@ -29,16 +29,20 @@ export function BylawsSection({ hoveredSection, setHoveredSection }: BylawsSecti
 
   async function fetchBylaws() {
     try {
+      console.log('Fetching bylaws...');
       const { data, error } = await supabase
         .from('bylaws')
         .select('*')
         .order('section_number');
+
+      console.log('Bylaws response:', { data, error, count: data?.length });
 
       if (error) {
         console.error('Error fetching bylaws:', error);
         toast.error('Kunne ikke hente vedtægter');
         setBylaws([]);
       } else {
+        console.log('Setting bylaws:', data?.length || 0, 'items');
         setBylaws(data || []);
       }
     } catch (error) {
