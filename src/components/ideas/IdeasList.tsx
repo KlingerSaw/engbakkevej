@@ -47,25 +47,6 @@ export function IdeasList() {
 
   useEffect(() => {
     fetchIdeas();
-
-    const channel = supabase
-      .channel('ideas_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'ideas'
-      }, (payload) => {
-        console.log('Received change:', payload);
-        fetchIdeas();
-      })
-      .subscribe((status) => {
-        console.log('Subscription status:', status);
-      });
-
-    return () => {
-      console.log('Cleaning up subscription');
-      supabase.removeChannel(channel);
-    };
   }, [selectedYear]);
 
   const handleIdeaAdded = (newIdea: Idea | null) => {

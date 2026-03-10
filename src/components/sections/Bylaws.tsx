@@ -24,74 +24,29 @@ export function BylawsSection({ hoveredSection, setHoveredSection }: BylawsSecti
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
 
   useEffect(() => {
-    console.log('Bylaws component mounted, fetching...');
-
-    testSimpleQuery();
     fetchBylaws();
   }, []);
 
-  async function testSimpleQuery() {
-    console.log('=== TESTING SIMPLE QUERY ===');
+  async function fetchBylaws() {
     try {
       const { data, error } = await supabase
-        .from('news')
-        .select('id, title')
-        .limit(1);
-      console.log('News test result:', { data, error });
-    } catch (err) {
-      console.error('News test error:', err);
-    }
-  }
-
-  async function fetchBylaws() {
-    console.log('=== START FETCHING BYLAWS ===');
-    console.log('Loading state:', loading);
-
-    try {
-      console.log('Supabase client exists:', !!supabase);
-      console.log('Supabase URL:', supabase.supabaseUrl);
-
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Query timeout after 10s')), 10000)
-      );
-
-      const queryPromise = supabase
         .from('bylaws')
         .select('*')
         .order('section_number');
 
-      console.log('Query created, awaiting response with 10s timeout...');
-
-      const { data, error } = await Promise.race([
-        queryPromise,
-        timeoutPromise
-      ]) as any;
-
-      console.log('=== RESPONSE RECEIVED ===');
-      console.log('Data:', data);
-      console.log('Error:', error);
-      console.log('Data length:', data?.length);
-
       if (error) {
-        console.error('Database error:', error);
-        toast.error(`Database fejl: ${error.message}`);
+        console.error('Error fetching bylaws:', error);
+        toast.error('Kunne ikke hente vedtægter');
         setBylaws([]);
       } else {
-        console.log('Setting bylaws to:', data);
         setBylaws(data || []);
       }
     } catch (error) {
-      console.error('Exception caught:', error);
-      if (error instanceof Error) {
-        toast.error(`Fejl: ${error.message}`);
-      } else {
-        toast.error('Kunne ikke hente vedtægter');
-      }
+      console.error('Exception fetching bylaws:', error);
+      toast.error('Kunne ikke hente vedtægter');
       setBylaws([]);
     } finally {
-      console.log('=== SETTING LOADING TO FALSE ===');
       setLoading(false);
-      console.log('Loading should now be false');
     }
   }
 
@@ -184,31 +139,16 @@ export function BylawsSection({ hoveredSection, setHoveredSection }: BylawsSecti
             </div>
           )}
 
-          <div className="mt-8 text-center space-y-4">
-            <div>
-              <p className="text-sm text-gray-600 mb-2">Debug info: {bylaws.length} vedtægter lastet, loading={loading.toString()}</p>
-              <button
-                onClick={() => {
-                  console.log('Manual refresh clicked');
-                  setLoading(true);
-                  fetchBylaws();
-                }}
-                className="text-sm bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 transition-colors"
-              >
-                Genindlæs (Debug)
-              </button>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Download vedtægter</h3>
-              <button
-                onClick={handleDownloadPDF}
-                className="inline-flex items-center gap-2 bg-brand-blue text-white px-6 py-3 rounded-lg hover:bg-brand-blue-dark transition-colors"
-                disabled={bylaws.length === 0}
-              >
-                <ScrollText className="w-5 h-5" />
-                <span>Hent som PDF</span>
-              </button>
-            </div>
+          <div className="mt-8 text-center">
+            <h3 className="text-lg font-semibold mb-4">Download vedtægter</h3>
+            <button
+              onClick={handleDownloadPDF}
+              className="inline-flex items-center gap-2 bg-brand-blue text-white px-6 py-3 rounded-lg hover:bg-brand-blue-dark transition-colors"
+              disabled={bylaws.length === 0}
+            >
+              <ScrollText className="w-5 h-5" />
+              <span>Hent som PDF</span>
+            </button>
           </div>
         </div>
       }

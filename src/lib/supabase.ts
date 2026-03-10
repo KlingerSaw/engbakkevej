@@ -11,7 +11,21 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase credentials!');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+  global: {
+    fetch: fetch.bind(globalThis),
+  },
+  db: {
+    schema: 'public',
+  },
+  realtime: {
+    transport: undefined as any,
+  }
+});
 
 export async function fetchMinutesFiles() {
   try {
