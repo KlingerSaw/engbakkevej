@@ -30,21 +30,27 @@ export function BylawsSection({ hoveredSection, setHoveredSection }: BylawsSecti
   async function fetchBylaws() {
     try {
       console.log('Fetching bylaws...');
+      console.log('Supabase client initialized:', !!supabase);
+
       const { data, error } = await supabase
         .from('bylaws')
         .select('*')
         .order('section_number');
 
+      console.log('Response:', { data, error });
+
       if (error) {
         console.error('Error fetching bylaws:', error);
-        throw error;
+        toast.error(`Database fejl: ${error.message}`);
+        setBylaws([]);
+      } else {
+        console.log('Fetched bylaws:', data);
+        setBylaws(data || []);
       }
-      
-      console.log('Fetched bylaws:', data);
-      setBylaws(data || []);
     } catch (error) {
-      console.error('Error fetching bylaws:', error);
+      console.error('Exception fetching bylaws:', error);
       toast.error('Kunne ikke hente vedtægter');
+      setBylaws([]);
     } finally {
       setLoading(false);
     }
@@ -83,16 +89,21 @@ export function BylawsSection({ hoveredSection, setHoveredSection }: BylawsSecti
       content={
         <div className="space-y-6">
           {loading ? (
-            <div className="animate-pulse space-y-4">
-              <div className="h-32 bg-white/20 rounded-lg"></div>
-              <div className="h-32 bg-white/20 rounded-lg"></div>
+            <div className="space-y-4">
+              <div className="animate-pulse space-y-4">
+                <div className="h-32 bg-white/20 rounded-lg"></div>
+                <div className="h-32 bg-white/20 rounded-lg"></div>
+              </div>
+              <p className="text-center text-sm text-gray-500">Henter vedtægter...</p>
+            </div>
+          ) : bylaws.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600 mb-2">Ingen vedtægter fundet</p>
+              <p className="text-sm text-gray-500">Kontakt administratoren hvis dette problem fortsætter</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6">
-              {bylaws.length === 0 ? (
-                <p className="text-center text-gray-500">Ingen vedtægter fundet</p>
-              ) : (
-                bylaws.map((bylaw) => (
+              {bylaws.map((bylaw) => (
                   <div 
                     key={bylaw.id}
                     className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden"
@@ -130,7 +141,7 @@ export function BylawsSection({ hoveredSection, setHoveredSection }: BylawsSecti
                     </AnimatePresence>
                   </div>
                 ))
-              )}
+              }
             </div>
           )}
 
