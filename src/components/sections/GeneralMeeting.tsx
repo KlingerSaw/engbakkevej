@@ -16,7 +16,8 @@ export function GeneralMeetingSection({ hoveredSection, setHoveredSection }: Gen
       icon={<Users className="w-6 h-6" />}
       content={
         <>
-          <p className="mb-6">Årligt afholdes den ordinære generalforsamling efter foreningens vedtægter. Vi håber, at I vil bakke op om generalforsamlingen ved at deltage.</p>
+          <p className="mb-2">Årligt afholdes den ordinære generalforsamling efter foreningens vedtægter.</p>
+          <p className="mb-6 font-bold">Vi håber, at I vil bakke op om generalforsamlingen ved at deltage.</p>
           <GeneralMeetingsList />
         </>
       }

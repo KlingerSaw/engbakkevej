@@ -16,6 +16,8 @@ export function WelcomeSection({ hoveredSection, setHoveredSection }: WelcomeSec
       content={
         <>
           <p>Som grundejer på Engbakkevej nr. 8-38 er du medlem af Grundejerforeningen Engbakken.</p>
+          <p className="mt-4">Har du ideer eller lignende, hører bestyrelsen gerne fra dig 🤗</p>
+          <p className="mt-4 font-semibold">Husk, at vi altid skal vide det, hvis du skifter din mailadresse.</p>
           <p className="mt-4">
             <a 
               href="https://www.google.com/maps/place/Engbakkevej+15,+8800+Viborg"
@@ -25,7 +27,7 @@ export function WelcomeSection({ hoveredSection, setHoveredSection }: WelcomeSec
                 hoveredSection === 0 ? 'text-brand-cream hover:text-brand-cream' : 'text-gray-700 hover:text-brand-blue'
               }`}
             >
-              Hjertestarter findes på garagen hos nr. 15 ❤️
+              Foreningen er ejer af en hjertestarter, som i nødstilfælde kan findes på garagen hos nr. 15 ❤️
               <ExternalLink className="w-4 h-4" />
             </a>
           </p>
